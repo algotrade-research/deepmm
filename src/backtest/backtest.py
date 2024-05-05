@@ -140,6 +140,7 @@ class Backtest:
                                         datetime=datetime)
                 self.send_order(short_order, next_tick_price)
 
+
             self.track_data(datetime, price, delta_bid, delta_ask, reserv_price)
             prev_time = datetime
     
