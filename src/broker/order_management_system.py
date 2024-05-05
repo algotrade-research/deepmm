@@ -27,7 +27,9 @@ class OrderManagementSystem:
             else:
                 return 1
 
-            
+        if order.order_type == OrderType.MARKET:
+            return 2
+
         return 0
         
         

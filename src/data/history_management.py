@@ -27,10 +27,10 @@ class HistoricalOrderDataManagement():
         total_short_size = 0
         total_short_price = 0
         for order in self.historical_order:
-            if order.order_type == PositionSide.LONG:
+            if order.position_side == PositionSide.LONG:
                 total_long_size += order.price_size.size
                 total_long_price += order.price_size.price
-            elif order.order_type == PositionSide.SHORT:
+            elif order.position_side == PositionSide.SHORT:
                 total_short_size += order.price_size.size
                 total_short_price += order.price_size.price
         
@@ -83,8 +83,8 @@ class HistoricalOrderDataManagement():
         return self.spread_bid, self.spread_ask
 
     def get_statistic(self):
-        _, profit_per_day, trade_per_day = self.get_data_per_day()
-        return self.get_avg_spread(), profit_per_day, trade_per_day
+        _, profit_per_day, num_trade_per_day = self.get_data_per_day()
+        return self.get_avg_spread(), profit_per_day, num_trade_per_day
     
     def export_df_market_timeprice(self, save_file=None):
         datetimes = []

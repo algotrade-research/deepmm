@@ -87,7 +87,7 @@ class DataOrder:
         return not (self.price_size.price == 0 or self.price_size.size == 0)
 
     def __repr__(self):
-        return f"{self.order_type} {self.price_size} {self.datetime}"
+        return f"Order: {self.datetime} {self.price_size} {self.position_side} {self.order_type}"
 
     def to_list(self):
-        return [self.datetime, self.price_size.price, self.price_size.size, self.order_type]
+        return [self.datetime, self.price_size.price, self.price_size.size, self.position_side, self.order_type]

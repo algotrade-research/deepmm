@@ -129,7 +129,6 @@ class Pipeline():
         # optimization
 
         if self.opts['PIPELINE']['params']['is_optimization']:
-            print("go heree")
             study.optimize(objective, n_trials=self.opts['OPTIMIZER']['params']['n_trials'])
             best_params = study.best_params
 
@@ -140,9 +139,9 @@ class Pipeline():
 
         # Start fitting with best params
         train_result = self.run_dataset(self.train_data, type_data='train')
-        print(train_result)
+        print("sharpe on training set: ",train_result)
         val_result = self.run_dataset(self.val_data, type_data='val')
-        print(val_result)
+        print("sharpe on val set: ",val_result)
           
 
     def run_dataset(self, datasets, type_data='train', is_visualize=True):
@@ -167,8 +166,8 @@ class Pipeline():
             self.opts['PIPELINE']['params']['M'] = num_day
             
             logger.info(f"Start fitting model for {symbol}")
-            rs = model.fit(monthly_data)
-            print("rsss", rs)
+            model.fit(monthly_data)
+            
             end_time_1m = time.time()
 
             logger.info(f"Execution time for {symbol}: {end_time_1m - start_time_1m}")

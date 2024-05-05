@@ -33,11 +33,12 @@ class Backtest:
     
     def send_order(self, order, next_tick_price):
         status = self.broker.send_order(order, next_tick_price)
+        
         if status == 2:
             if order.position_side == PositionSide.LONG:
-                self.inventory.increase_inventory(order.price_size.size)
+                self.inventory.increase_inventory()
             elif order.position_side == PositionSide.SHORT:
-                self.inventory.decrease_inventory(order.price_size.size)
+                self.inventory.decrease_inventory()
             
             self.track_order(order)
 
@@ -71,7 +72,7 @@ class Backtest:
         while self.inventory.current_inventory < 0:
             long_order = DataOrder(price_size=PriceSize(price=price, size = 1),
                                 position_side=PositionSide.LONG,
-                                order_type=OrderType.LIMIT,
+                                order_type=OrderType.MARKET,
                                 datetime=datetime)
             self.send_order(long_order, next_tick_price)
         
@@ -79,7 +80,7 @@ class Backtest:
         while self.inventory.current_inventory  > 0:
             short_order = DataOrder(price_size=PriceSize(price=price, size = 1),
                                 position_side=PositionSide.SHORT,
-                                order_type=OrderType.LIMIT,
+                                order_type=OrderType.MARKET,
                                 datetime=datetime)
             self.send_order(short_order, next_tick_price)
     
@@ -143,7 +144,7 @@ class Backtest:
 
             self.track_data(datetime, price, delta_bid, delta_ask, reserv_price)
             prev_time = datetime
-    
+        
     def get_monthly_history(self):
         return deepcopy(self.monthly_history_data_order)
     

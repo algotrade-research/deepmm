@@ -14,8 +14,10 @@ class InventoryManagement():
         self.current_inventory += num_contract
     
     def decrease_inventory(self, num_contract=1):
+        if num_contract > 0:
+            num_contract = -num_contract
         self.previous_inventory = self.current_inventory
-        self.current_inventory -= num_contract
+        self.current_inventory += num_contract
 
     def get_maximum_inventory(self):
         return deepcopy(self.maximum_inventory)
