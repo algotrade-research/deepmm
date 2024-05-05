@@ -1,0 +1,21 @@
+# Hypothesis
+# Short at 10:30:00
+# Close at 11:29:45
+
+
+
+ALGO:
+  name: "trade01"
+  version: "1.0.0"
+  description: "Short at 10:30:00, Close at 11:29:45"
+  
+opts:
+  save_dir: "runs/trade01"
+  maturity: True
+    
+
+DATASET:
+  TRAIN:
+    csv_file: "datasets/train.csv"
+  VAL:
+    csv_file: "datasets/val.csv"
