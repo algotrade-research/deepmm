@@ -1,0 +1,15 @@
+name: deepmm
+channels:
+  - conda-forge
+dependencies:
+  #
+  - pandas
+  - tqdm
+  - matplotlib
+  - pyyaml
+  - tabulate
+  - pip
+  - pip:
+    - einops
+    - plotly
+    - psycopg2-binary

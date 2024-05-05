@@ -1,0 +1,50 @@
+PIPELINE:
+  name: "market making"
+  version: "1.0.0"
+  description: "Implementation of Avellaneda-Stoikov's approach"
+  params:
+    fee: 0.125
+    # pipeline parameters
+    save_dir: "runs/market_making"
+    is_optimization: False
+    maximum_inventory: 35
+    
+  # Market Making Parameters
+    num_of_spread: 2.0
+    gamma: 0.1 # risk aversion
+    historical_window_size: 5 # number of days used to calculate the historical volatility
+    min_second_time_step: 10
+    close_at: "14:20:45"
+    start_at: "09:00:00"
+
+OPTIMIZER:
+  name: "custom_optuna"
+  params:
+    n_trials: 50
+    study_name: "market_making"
+    storage: "sqlite:///market_making.db"
+    load_if_exists: True
+
+    gamma:
+      type: "float"
+      values: [0.1, 0.2, 0.3, 0.4, 0.5]
+
+    num_of_spread:
+      type: "float"
+      values: [1.0, 1.5, 2.0, 2.5, 3.0]
+    
+    historical_window_size:
+      type: "int"
+      values: [5, 10, 15, 20, 25]
+    
+    min_second_time_step:
+      type: "int"
+      values: [5, 10, 20]
+
+DATASET:
+  TRAIN:
+    csv_file: "datasetATDB/train.csv"
+  VAL:
+    csv_file: "datasetATDB/val.csv"
+  TEST:
+    csv_file: "datasetATDB/test.csv"
