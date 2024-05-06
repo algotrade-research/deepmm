@@ -3,6 +3,27 @@ import numpy as np
 import pandas as pd
 from src.data.data_type import DataOrder, PositionSide, PriceSize
 
+class HistoricalTickdata():
+    def __init__(self):
+        self.datetime = np.array([])
+        self.price = np.array([])
+    
+    def append_tick(self, datetime, price):
+        self.datetime = np.append(self.datetime, datetime)
+        self.price = np.append(self.price, price)
+
+    def export_df_market_timeprice(self, save_file=None):
+        datetimes = []
+        prices = []
+        for (datetime, price) in zip(self.datetime, self.price):
+            datetimes.append(datetime)
+            prices.append(price)
+        df = pd.DataFrame({'datetime': datetimes, 
+                           'price': prices})
+        if save_file:
+            df.to_csv(save_file, index=False)
+        return df
+
 class HistoricalOrderDataManagement():
     def __init__(self):
         self.historical_order = []
@@ -85,18 +106,6 @@ class HistoricalOrderDataManagement():
     def get_statistic(self):
         _, profit_per_day, num_trade_per_day = self.get_data_per_day()
         return self.get_avg_spread(), profit_per_day, num_trade_per_day
-    
-    def export_df_market_timeprice(self, save_file=None):
-        datetimes = []
-        prices = []
-        for (datetime, price) in self.market_timeprice:
-            datetimes.append(datetime)
-            prices.append(price)
-        df = pd.DataFrame({'datetime': datetimes, 
-                           'price': prices})
-        if save_file:
-            df.to_csv(save_file, index=False)
-        return df
 
     def export_df_long_trade(self, save_file=None):
         datetimes = []

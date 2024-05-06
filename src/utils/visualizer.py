@@ -5,14 +5,13 @@ import pandas as pd
 import numpy as np
 import os
 
-from src.data.history_management import HistoricalOrderDataManagement
+from src.data.history_management import HistoricalOrderDataManagement, HistoricalTickdata
 
 
 class VISUALIZER():
 
     def __init__(self, fees: float) -> None:
         self.fees = fees
-
 
     def visualize_total_data(self, total_data, save_dir: str, name="bruh"):
         os.makedirs(save_dir, exist_ok=True)
@@ -34,10 +33,10 @@ class VISUALIZER():
         fig.write_html(f"{save_dir}/pnl_accum.html")
 
     def visualize_monthly_data(self, 
-                               model,
-                               bot_data: HistoricalOrderDataManagement,
-                               save_dir: str,
-                               symbol: str):
+                               bot_data:HistoricalOrderDataManagement,
+                               bot_data_market_time_price: HistoricalTickdata,
+                               symbol: str,
+                               save_dir: str,):
         """
         args:
             monthly_data: numpy_list of monthly data
@@ -46,9 +45,8 @@ class VISUALIZER():
         os.makedirs(save_dir, exist_ok=True)
         os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)
 
-        
         # Create a DataFrame
-        df = bot_data.export_df_market_timeprice()
+        df = bot_data_market_time_price.export_df_market_timeprice()
         df_long_trade = bot_data.export_df_long_trade()
         df_short_trade = bot_data.export_df_short_trade()
 
@@ -95,20 +93,43 @@ class VISUALIZER():
         # Display the chart
         if save_dir:
             fig.write_html(f"{save_dir}/{symbol}/{symbol}_monthly_trend.html")
+    
+    def visualize_trend_order(self,
+                              bot_data:HistoricalOrderDataManagement,
+                              bot_data_market_timeprice: HistoricalTickdata,
+                              symbol: str,
+                              save_dir:str):
+        pass
+
+    def visualize_profit(self,  
+                         bot_data:HistoricalOrderDataManagement,
+                         symbol:str,
+                         save_dir:str,):
         
+        os.makedirs(save_dir, exist_ok=True)
+        os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)
         df_profit = bot_data.export_df_profit_per_day(save_file=f"{save_dir}/{symbol}/{symbol}_monthly_profit.csv")
         profit_after_fee = df_profit['profit'] - df_profit['num_trade']*self.fees
         df_profit['profit_after_fee'] = profit_after_fee
         fig_profig = go.Figure()
         fig_profig.add_trace(go.Bar(x=df_profit['datetime'], y=df_profit['profit'], name='Profit Without Trading Fee', marker_color='blue'))
         fig_profig.add_trace(go.Bar(x=df_profit['datetime'], y=df_profit['profit_after_fee'], name='Profit After Fee', marker_color='green'))
-        fig_profig.write_html(f"{save_dir}/{symbol}/{symbol}_monthly_profit.html")
+        if save_dir:
+            fig_profig.write_html(f"{save_dir}/{symbol}/{symbol}_monthly_profit.html")
 
-
+    def visualize_bid_ask_spread(self,
+                                 bot_data:HistoricalOrderDataManagement,
+                                 bot_data_market_timeprice:HistoricalTickdata, 
+                                 symbol: str,
+                                 save_dir: str):
         # Visualize Spread
-
+        os.makedirs(save_dir, exist_ok=True)
+        os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)
         bids, asks = bot_data.get_bidsask_spread()
-
+        df = bot_data_market_timeprice.export_df_market_timeprice()
+        df_long_trade = bot_data.export_df_long_trade()
+        df_short_trade = bot_data.export_df_short_trade()
+        
         datetime = df['datetime']
         df_spread = pd.DataFrame({ "datetime": datetime,
                                    "ask": asks,

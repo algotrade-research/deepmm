@@ -127,7 +127,6 @@ class Pipeline():
         train_result = self.run_dataset(self.train_data, type_data='train')
 
         # optimization
-
         if self.opts['PIPELINE']['params']['is_optimization']:
             study.optimize(objective, n_trials=self.opts['OPTIMIZER']['params']['n_trials'])
             best_params = study.best_params
@@ -156,8 +155,10 @@ class Pipeline():
         logger.info("Start fitting model")
         logger.info("with parameters: ")
         logger.info(self.opts['PIPELINE']['params'])
-
+        
         for symbol in distinct_symbols:
+            if not symbol in ["VN30F2304", "VN30F2305", "VN30F2306", "VN30F2307"]:
+                continue
             start_time_1m = time.time()
             monthly_data = datasets[datasets['tickersymbol'] == symbol].drop(['tickersymbol'], axis=1).to_numpy()
 
@@ -174,10 +175,10 @@ class Pipeline():
             self._log_results(logger,model, symbol)
             
             if is_visualize:
-                visualizer.visualize_monthly_data(model,
-                                                model.monthly_history_data_order,
-                                                    self.opts['PIPELINE']['params']['save_dir']/type_data,
-                                                    symbol)
+                visualizer.visualize_monthly_data(bot_data=model.get_monthly_history(),
+                                                  bot_data_market_time_price=model.monthly_tick_data,
+                                                  symbol=symbol,
+                                                  save_dir=self.opts['PIPELINE']['params']['save_dir']/type_data)
         
         name = f"trading_with_maximum_inventory{self.opts['PIPELINE']['params']['maximum_inventory']}_windowsize{self.opts['PIPELINE']['params']['historical_window_size']}_min_second_time_step{self.opts['PIPELINE']['params']['min_second_time_step']}"
         if is_visualize:

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from utils.date_management import num_days_to_maturity
+from utils.date_management import get_num_days_to_maturity
 
 from utils.db_connection import DataConnection
 
