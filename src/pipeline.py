@@ -157,8 +157,6 @@ class Pipeline():
         logger.info(self.opts['PIPELINE']['params'])
         
         for symbol in distinct_symbols:
-            if not symbol in ["VN30F2304", "VN30F2305", "VN30F2306", "VN30F2307"]:
-                continue
             start_time_1m = time.time()
             monthly_data = datasets[datasets['tickersymbol'] == symbol].drop(['tickersymbol'], axis=1).to_numpy()
 

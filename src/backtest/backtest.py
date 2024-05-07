@@ -45,6 +45,7 @@ class Backtest:
                 self.inventory.decrease_inventory()
             
             self.track_order(order)
+            self.track_inventory(order.datetime, self.inventory.current_inventory)
 
     def track_order(self, order):
         self.monthly_history_data_order.append_order(order)
@@ -55,12 +56,14 @@ class Backtest:
         self.monthly_history_data_order.append_profit_per_day(profit=profit, num_trade=num_trade, date=date)
         self.total_history_data_order.append_profit_per_day(profit=profit, num_trade=num_trade, date=date)
 
-    def track_tick_data(self, datetime, price):
+    def track_inventory(self, datetime, inventory):
+        self.monthly_history_data_order.append_inventory(datetime, inventory)
+        self.total_history_data_order.append_inventory(datetime, inventory)
+
+    def track_data(self, datetime, price, delta_bid=0, delta_ask=0, reserv_price=0):
         self.monthly_tick_data.append_tick(datetime, price)
         self.total_tick_data.append_tick(datetime, price)
 
-
-    def track_data(self, delta_bid=0, delta_ask=0, reserv_price=0):
         # Track Model Spread and Model Reserv Price
         self.monthly_history_data_order.append_spread(delta_bid=delta_bid, delta_ask=delta_ask)
         self.total_history_data_order.append_spread(delta_bid=delta_bid, delta_ask=delta_ask)
@@ -102,20 +105,20 @@ class Backtest:
         for t , (datetime, price) in enumerate(datasets[:-1], start=0):
             next_tick_price = datasets[t+1][1]
             if check_stringtime_less_starttime(datetime, self.start_at):
-                self.track_tick_data(datetime, price)
+                self.track_data(datetime=datetime, price=price, delta_bid=price, delta_ask=price, reserv_price=price)
                 continue
 
             if count_history_day < self.historical_window_size:
                 self.history_price = np.append(self.history_price, price)
                 if check_stringtime_greater_closetime(datetime, self.close_at):
                     count_history_day += 1
-                self.track_tick_data(datetime, price)
+                self.track_data(datetime=datetime, price=price, delta_bid=price, delta_ask=price, reserv_price=price)
                 continue
 
             if check_stringtime_greater_closetime(datetime, self.close_at):
                 ## It's closing time at end day
                 self._auto_close_position(price, datetime, next_tick_price)
-                self.track_tick_data(datetime, price)
+                self.track_data(datetime=datetime, price=price, delta_bid=price, delta_ask=price, reserv_price=price)
                 # Take End day profit
                 if self.inventory.current_inventory == 0 and not is_waiting_new_day:
                     atc_price = price
@@ -149,8 +152,7 @@ class Backtest:
                                         datetime=datetime)
                 self.send_order(short_order, next_tick_price)
 
-            self.track_tick_data(datetime, price)
-            self.track_data(delta_bid, delta_ask, reserv_price)
+            self.track_data(datetime, price, delta_bid, delta_ask, reserv_price)
             prev_time = datetime
         
     def get_monthly_history(self):

@@ -5,17 +5,22 @@ from src.data.data_type import DataOrder, PositionSide, PriceSize
 
 class HistoricalTickdata():
     def __init__(self):
-        self.datetime = np.array([])
-        self.price = np.array([])
+        self.size = 0
+        self.datetime = []
+        self.price = []
     
+    def get_hictory_tick(self):
+        return np.array(self.datetime), np.array(self.price)
+
     def append_tick(self, datetime, price):
-        self.datetime = np.append(self.datetime, datetime)
-        self.price = np.append(self.price, price)
+        self.datetime.append(datetime)
+        self.price.append(price)
 
     def export_df_market_timeprice(self, save_file=None):
         datetimes = []
         prices = []
-        for (datetime, price) in zip(self.datetime, self.price):
+        datetime, price = self.get_hictory_tick()
+        for (datetime, price) in zip(datetime, price):
             datetimes.append(datetime)
             prices.append(price)
         df = pd.DataFrame({'datetime': datetimes, 
@@ -33,7 +38,7 @@ class HistoricalOrderDataManagement():
         self.profit_per_day = np.array([])
         self.market_timeprice = []
         self.num_trade_per_day = np.array([])
-        self.inventory_per_day = np.array([])
+        self.track_inventory = []
 
     def __len__(self):
         return len(self.historical_order)
@@ -83,6 +88,9 @@ class HistoricalOrderDataManagement():
         self.profit_per_day = np.append(self.profit_per_day, profit)
         self.trading_day.append(date)
         self.num_trade_per_day = np.append(self.num_trade_per_day, num_trade)
+
+    def append_inventory(self, datetime, num_inventory):
+        self.track_inventory.append([datetime, num_inventory])
 
     def get_data_per_day(self):
         return deepcopy(self.trading_day), deepcopy(self.profit_per_day), deepcopy(self.num_trade_per_day)
@@ -159,6 +167,18 @@ class HistoricalOrderDataManagement():
                            'price': prices, 
                            'size': sizes, 
                            'order_type': order_types})
+        if save_file:
+            df.to_csv(save_file, index=False)
+        return df
+    
+    def export_df_inventory(self, save_file=None):
+        datetimes = []
+        inventory = []
+        for track in self.track_inventory:
+            datetimes.append(track[0])
+            inventory.append(track[1])
+        df = pd.DataFrame({'datetime': datetimes, 
+                           'inventory': inventory})
         if save_file:
             df.to_csv(save_file, index=False)
         return df

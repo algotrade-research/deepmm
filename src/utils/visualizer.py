@@ -42,17 +42,48 @@ class VISUALIZER():
             monthly_data: numpy_list of monthly data
             bot_data: list of bot data
         """
+        self.visualize_trend_order(bot_data, bot_data_market_time_price, symbol, save_dir)
+        self.visualize_profit(bot_data, symbol, save_dir)
+        self.visualize_bid_ask_spread(bot_data, bot_data_market_time_price, symbol, save_dir)
+        self.visualize_inventory(bot_data, symbol, save_dir)
+    
+    def visualize_inventory(self, 
+                            bot_data:HistoricalOrderDataManagement,
+                            symbol:str,
+                            save_dir:str):
+        os.makedirs(save_dir, exist_ok=True)
+        os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)
+
+        df_inventory = bot_data.export_df_inventory(save_file=f"{save_dir}/{symbol}/inventory.csv")
+        fig_inventory = go.Figure()
+        fig_inventory.add_trace(go.Scatter(x=df_inventory['datetime'], 
+                                       y=df_inventory['inventory'], 
+                                        mode='lines+markers',
+                                       name='Inventory', 
+                                       marker=dict(color='blue', size=20)))
+        
+        fig_inventory.update_layout(title='Inventory Management',
+                                    xaxis_title='Date',
+                                    yaxis_title='Inventory')
+        if save_dir:
+            fig_inventory.write_html(f"{save_dir}/{symbol}/{symbol}_inventory.html")
+
+    def visualize_trend_order(self,
+                              bot_data:HistoricalOrderDataManagement,
+                              bot_data_market_timeprice: HistoricalTickdata,
+                              symbol: str,
+                              save_dir:str):
         os.makedirs(save_dir, exist_ok=True)
         os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)
 
         # Create a DataFrame
-        df = bot_data_market_time_price.export_df_market_timeprice()
+        df = bot_data_market_timeprice.export_df_market_timeprice()
         df_long_trade = bot_data.export_df_long_trade()
         df_short_trade = bot_data.export_df_short_trade()
 
         df_order = bot_data.export_df_order()
         if save_dir:
-            df_order.to_csv(f"{save_dir}/{symbol}/{symbol}_monthly_order.csv")
+            df_order.to_csv(f"{save_dir}/{symbol}/{symbol}_order.csv")
         # Create the line chart with Plotly
         fig = go.Figure(
             data=[go.Scatter(
@@ -92,14 +123,7 @@ class VISUALIZER():
 
         # Display the chart
         if save_dir:
-            fig.write_html(f"{save_dir}/{symbol}/{symbol}_monthly_trend.html")
-    
-    def visualize_trend_order(self,
-                              bot_data:HistoricalOrderDataManagement,
-                              bot_data_market_timeprice: HistoricalTickdata,
-                              symbol: str,
-                              save_dir:str):
-        pass
+            fig.write_html(f"{save_dir}/{symbol}/{symbol}_trend.html")
 
     def visualize_profit(self,  
                          bot_data:HistoricalOrderDataManagement,
@@ -108,14 +132,14 @@ class VISUALIZER():
         
         os.makedirs(save_dir, exist_ok=True)
         os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)
-        df_profit = bot_data.export_df_profit_per_day(save_file=f"{save_dir}/{symbol}/{symbol}_monthly_profit.csv")
+        df_profit = bot_data.export_df_profit_per_day(save_file=f"{save_dir}/{symbol}/{symbol}_profit.csv")
         profit_after_fee = df_profit['profit'] - df_profit['num_trade']*self.fees
         df_profit['profit_after_fee'] = profit_after_fee
         fig_profig = go.Figure()
         fig_profig.add_trace(go.Bar(x=df_profit['datetime'], y=df_profit['profit'], name='Profit Without Trading Fee', marker_color='blue'))
         fig_profig.add_trace(go.Bar(x=df_profit['datetime'], y=df_profit['profit_after_fee'], name='Profit After Fee', marker_color='green'))
         if save_dir:
-            fig_profig.write_html(f"{save_dir}/{symbol}/{symbol}_monthly_profit.html")
+            fig_profig.write_html(f"{save_dir}/{symbol}/{symbol}_profit.html")
 
     def visualize_bid_ask_spread(self,
                                  bot_data:HistoricalOrderDataManagement,
@@ -131,7 +155,7 @@ class VISUALIZER():
         df_short_trade = bot_data.export_df_short_trade()
         
         datetime = df['datetime']
-        df_spread = pd.DataFrame({ "datetime": datetime,
+        df_spread = pd.DataFrame({"datetime": datetime,
                                    "ask": asks,
                                   "bid": bids})
         
@@ -140,7 +164,8 @@ class VISUALIZER():
 
         fitlered_df = remove_zero_value(df_spread.copy())
         if save_dir:
-            df_spread.to_csv(f"{save_dir}/{symbol}/{symbol}_monthly_ask_bid.csv")
+            df_spread.to_csv(f"{save_dir}/{symbol}/{symbol}_ask_bid.csv")
+
         fig_ask_bid = go.Figure()
         fig_ask_bid.add_trace(go.Scatter(x=df['datetime'], y=df['price'], mode='lines', name='Tick Prices'))
         fig_ask_bid.add_trace(go.Scatter(x=fitlered_df['datetime'], y=fitlered_df['ask'], mode='lines', name='Ask', line=dict(color='red')))
@@ -167,4 +192,4 @@ class VISUALIZER():
         )
         
         if save_dir:
-            fig_ask_bid.write_html(f"{save_dir}/{symbol}/{symbol}_monthly_ask_bid.html")
+            fig_ask_bid.write_html(f"{save_dir}/{symbol}/{symbol}_ask_bid.html")
