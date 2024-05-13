@@ -1,16 +1,18 @@
 import os
 import time
+import json
 import logging
+import optuna
 import numpy as np
 import pandas as pd
-import optuna
+from datetime import datetime
 
-from src.backtest.backtest import Backtest
+from src.bot.bot import Bot
 from src.metrics import sharpe_ratio, maximum_drawdown
 from src.utils.visualizer import VISUALIZER
 
 from utils.loading_file import load_csv
-from utils.date_management import get_num_days_to_maturity
+from utils.date_management import get_num_days_to_maturity, make_date_to_tickersymbol
 
 
 class Pipeline():
@@ -50,7 +52,6 @@ class Pipeline():
         logger.addHandler(file_handler)
         logger.addHandler(stream_handler)
         return logger
-    
 
     def calculate_performance_score(self, returns, num_order, fees=0.3):
         profit_array = np.array(returns)
@@ -71,13 +72,22 @@ class Pipeline():
         logger.info("%14s %21s" % ('statistic on', str(symbol)))
         logger.info(40 * "-")
         logger.info("%14s %20.5f" % ("Average spread :", monthlyAvgSpread))
-        logger.info("%14s %20.5f" % ("Number of trade :", num_order.sum()))
+        logger.info("%14s %20.5f" % ("Number of transaction :", num_order.sum()))
         logger.info("%16s %20.5f" % ("Profit :", profit))
         logger.info("%16s %20.5f" % ("Sharpe ratio :", sharpe))
         logger.info("%16s %20.5f" % ("Max drawdown :", max_drawdown_value))
 
         return monthlyAvgSpread, num_order, profit, sharpe, max_drawdown_value
-    
+
+    def report_monthly_data(self, model, save_dir=None):
+        os.makedirs(save_dir, exist_ok=True)
+        model.get_monthly_history().export_df_inventory(save_file=save_dir/'inventory.csv')
+        df_order_analysis = model.get_monthly_history().export_df_order_analysis(save_file=save_dir/'order.csv')
+        model.get_monthly_history().export_df_profit_per_day(save_file=save_dir/'profit.csv')
+        bids,asks = model.get_monthly_history().get_bidsask_spread()
+        df = model.monthly_tick_data.export_df_market_timeprice()
+        df_spread = pd.DataFrame({'datetime':df['datetime'],'ask': asks, 'bid': bids})
+        df_spread.to_csv(save_dir/'ask_bid.csv', index=False)
 
     def export_df_result(self, model, save_dir=None):
         totalAvgSpread, totalProfit, num_order = model.get_total_history().get_statistic()
@@ -122,10 +132,6 @@ class Pipeline():
         
         
         objective = self.optimizing(self.train_data)
-
-        # Start first params
-        train_result = self.run_dataset(self.train_data, type_data='train')
-
         # optimization
         if self.opts['PIPELINE']['params']['is_optimization']:
             study.optimize(objective, n_trials=self.opts['OPTIMIZER']['params']['n_trials'])
@@ -138,9 +144,7 @@ class Pipeline():
 
         # Start fitting with best params
         train_result = self.run_dataset(self.train_data, type_data='train')
-        print("sharpe on training set: ",train_result)
         val_result = self.run_dataset(self.val_data, type_data='val')
-        print("sharpe on val set: ",val_result)
           
 
     def run_dataset(self, datasets, type_data='train', is_visualize=True):
@@ -151,11 +155,10 @@ class Pipeline():
         visualizer = VISUALIZER(fees=self.opts['PIPELINE']['params']['fee'])
         distinct_symbols = datasets['tickersymbol'].unique()
         
-        model = Backtest(self.opts['PIPELINE']['params'])
+        model = Bot(self.opts['PIPELINE']['params'])
         logger.info("Start fitting model")
         logger.info("with parameters: ")
         logger.info(self.opts['PIPELINE']['params'])
-        
         for symbol in distinct_symbols:
             start_time_1m = time.time()
             monthly_data = datasets[datasets['tickersymbol'] == symbol].drop(['tickersymbol'], axis=1).to_numpy()
@@ -172,6 +175,7 @@ class Pipeline():
             logger.info(f"Execution time for {symbol}: {end_time_1m - start_time_1m}")
             self._log_results(logger,model, symbol)
             
+            self.report_monthly_data(model, save_dir=self.opts['PIPELINE']['params']['save_dir']/type_data/symbol)
             if is_visualize:
                 visualizer.visualize_monthly_data(bot_data=model.get_monthly_history(),
                                                   bot_data_market_time_price=model.monthly_tick_data,
@@ -190,4 +194,37 @@ class Pipeline():
         profit, sharpe, max_drawdown_value = self.calculate_performance_score(totalProfit, 
                                                                               num_order,
                                                                               self.opts['PIPELINE']['params']['fee'])
+        
+        logger.info(f"result on {type_data} with profit_return {profit}    sharpe {sharpe}   mdd {max_drawdown_value}")
         return profit, sharpe, max_drawdown_value
+    
+    def init_opts_papetrading(self, type_data = 'papertrading', name_logger='papertrading'):
+        logger = self._init_logging(self.opts['PIPELINE']['params']['save_dir']/type_data/'log.txt', name=name_logger)
+        visualizer = VISUALIZER(fees=self.opts['PIPELINE']['params']['fee'])
+        model = Bot(self.opts['PIPELINE']['params'])
+
+    def redis_message_handler(redis_message):
+
+        quote = json.loads(redis_message['data'])
+        cur_price = quote['latest_matched_price']
+
+    def run_papertrading(self, redis_client):
+        # check connection to redis OK
+        print(redis_client.ping())
+
+        # current_date = datetime.now()
+        # tickersymbol = make_date_to_tickersymbol(current_date)
+        # F1M_CHANNEL = f'HNXDS:{tickersymbol}'
+
+        # pub_sub = redis_client.pubsub()
+
+        # # subcribe to channel F1M channel
+        # # register a callback function to handle message received from redis-server
+        # pub_sub.psubscribe(**{F1M_CHANNEL: redis_message_handler})
+        # pubsub_thread = pub_sub.run_in_thread(sleep_time=1)
+
+        # time.sleep(60)
+
+        # pubsub_thread.stop()
+
+        # print('FINISH.')

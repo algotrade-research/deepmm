@@ -1,7 +1,8 @@
 from copy import deepcopy
 import numpy as np
 import pandas as pd
-from src.data.data_type import DataOrder, PositionSide, PriceSize
+from src.data.data_type import PositionSide
+from utils.date_management import make_date_from_string
 
 class HistoricalTickdata():
     def __init__(self):
@@ -32,12 +33,12 @@ class HistoricalTickdata():
 class HistoricalOrderDataManagement():
     def __init__(self):
         self.historical_order = []
-        self.spread_bid, self.spread_ask = np.array([]), np.array([])
-        self.reserv_price = np.array([])
+        self.spread_bid, self.spread_ask = [], []
+        self.reserv_price = []
         self.trading_day = []
-        self.profit_per_day = np.array([])
+        self.profit_per_day = []
         self.market_timeprice = []
-        self.num_trade_per_day = np.array([])
+        self.num_trade_per_day = []
         self.track_inventory = []
 
     def __len__(self):
@@ -75,29 +76,28 @@ class HistoricalOrderDataManagement():
         self.historical_order.append(order)
         
     def append_spread(self, delta_bid, delta_ask):
-        self.spread_bid = np.append(self.spread_bid, delta_bid)
-        self.spread_ask = np.append(self.spread_ask, delta_ask)
+        self.spread_bid.append(delta_bid)
+        self.spread_ask.append(delta_ask)
 
     def append_reserv_price(self, reserv_price):
-        self.reserv_price = np.append(self.reserv_price, reserv_price)
+        self.reserv_price.append(reserv_price)
 
     def append_timeprice(self, datetime, price):
         self.market_timeprice.append([datetime, price])
 
     def append_profit_per_day(self, profit=0, num_trade=0, date=None):
-        self.profit_per_day = np.append(self.profit_per_day, profit)
+        self.profit_per_day.append(profit)
         self.trading_day.append(date)
-        self.num_trade_per_day = np.append(self.num_trade_per_day, num_trade)
+        self.num_trade_per_day.append(num_trade)
 
     def append_inventory(self, datetime, num_inventory):
         self.track_inventory.append([datetime, num_inventory])
 
     def get_data_per_day(self):
-        return deepcopy(self.trading_day), deepcopy(self.profit_per_day), deepcopy(self.num_trade_per_day)
+        return deepcopy(self.trading_day), deepcopy(np.array(self.profit_per_day)), deepcopy(np.array(self.num_trade_per_day))
     
     def get_list_historical_order(self):
         return [order.to_list() for order in self.historical_order]
-
 
     def get_avg_spread(self):
         bid_spread = np.mean(self.spread_bid)
@@ -166,7 +166,52 @@ class HistoricalOrderDataManagement():
         df = pd.DataFrame({'datetime': datetimes, 
                            'price': prices, 
                            'size': sizes, 
-                           'order_type': order_types})
+                           'position_side': order_types})
+        if save_file:
+            df.to_csv(save_file, index=False)
+        return df
+    
+    def export_df_order_analysis(self, fees=0, save_file=None):
+        list_order_position = deepcopy(self.historical_order)
+        
+        open_times = []
+        close_times = []
+        open_prices = []
+        close_prices = []
+        open_sides = []
+        close_sides = []
+        profits = []
+        durations = []
+
+        while len(list_order_position) > 0:
+            open_order = list_order_position.pop(0)
+            for close_order in list_order_position:
+                if close_order.position_side != open_order.position_side:
+                    open_times.append(open_order.datetime)
+                    open_prices.append(open_order.price_size.price)
+                    close_times.append(close_order.datetime)
+                    close_prices.append(close_order.price_size.price)
+                    open_sides.append(open_order.position_side)
+                    close_sides.append(close_order.position_side)
+                    profit = (close_order.price_size.price - open_order.price_size.price) * open_order.price_size.size - fees*2
+                    if open_order.position_side == PositionSide.SHORT:
+                        profit = (open_order.price_size.price - close_order.price_size.price) * open_order.price_size.size - fees*2
+                    profits.append(profit)
+                    durations.append((make_date_from_string(close_order.datetime) - make_date_from_string(open_order.datetime)).total_seconds())
+                    list_order_position.remove(close_order)
+                    break
+        
+        df = pd.DataFrame({
+        "open_time": open_times,
+        "close_time": close_times,
+        "duration": durations,
+        "open_price": open_prices,
+        "close_price": close_prices,
+        "profit": profits,
+        "open_side": open_sides,
+        "close_side": close_sides,
+        })
+            
         if save_file:
             df.to_csv(save_file, index=False)
         return df

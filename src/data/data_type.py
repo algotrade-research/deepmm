@@ -5,6 +5,19 @@ from typing import (
     NamedTuple,
 )
 
+class Tickdata():
+    def __init__(self, datetime=None, price=None):
+        self.datetime = datetime
+        self.price = price
+    
+    def is_empty(self):
+        if self.datetime is None or self.price is None:
+            return True
+        return False
+    
+    def __repr__(self):
+        return f"{self.datetime} {self.price}"
+
 class OrderType():
     MARKET = 1
     LIMIT = 2
@@ -83,8 +96,8 @@ class DataOrder:
         self.position_side = position_side
         self.datetime = datetime
     
-    def is_valid_to_post_order(self):
-        return not (self.price_size.price == 0 or self.price_size.size == 0)
+    def is_empty(self):
+        return (self.price_size.price == 0 or self.price_size.size == 0 or self.datetime == "" or self.position_side == PositionSide.NONE)
 
     def __repr__(self):
         return f"Order: {self.datetime} {self.price_size} {self.position_side} {self.order_type}"

@@ -12,6 +12,8 @@ def sharpe_ratio(returns, risk_free_rate=0.03, periods_per_year=252):
     Returns:
     float: The Sharpe ratio of the strategy.
     """
+    if len(returns) == 0:
+        return 0
     annual_std = np.sqrt(periods_per_year) * np.std(returns)
     annual_return = periods_per_year*np.mean(returns)  - risk_free_rate
 

@@ -1,9 +1,11 @@
 # from matplotlib import pyplot as plt
-import plotly.express as px
+import plotly
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 import os
+
+import plotly.subplots
 
 from src.data.history_management import HistoricalOrderDataManagement, HistoricalTickdata
 
@@ -46,6 +48,40 @@ class VISUALIZER():
         self.visualize_profit(bot_data, symbol, save_dir)
         self.visualize_bid_ask_spread(bot_data, bot_data_market_time_price, symbol, save_dir)
         self.visualize_inventory(bot_data, symbol, save_dir)
+        self.visualize_table_order_analysis(bot_data, save_dir/symbol)
+
+    def visualize_table_order_analysis(self, bot_data:HistoricalOrderDataManagement, save_dir:str):
+        df_order_analysis = bot_data.export_df_order_analysis()
+        df_order_analysis = df_order_analysis.round(2)
+
+
+        for i, row in df_order_analysis.iterrows():
+            df_order_analysis.loc[i,'open_time'] = row['open_time'][:-4]
+            df_order_analysis.loc[i,'close_time'] = row['close_time'][:-4]
+       
+        os.makedirs(save_dir, exist_ok=True)
+        fig_order = plotly.subplots.make_subplots(rows=2, cols=1,
+                                                  shared_xaxes=True,
+                                                  specs=[[{'type':'table'}],
+                                                         [{'type':'table'}]])
+
+        fig_order.add_trace(go.Table(header=dict(values=list(df_order_analysis.columns)),
+                                    cells=dict(values=df_order_analysis.transpose().values.tolist())),
+                                    row=1, col=1)
+        
+        df_describe = df_order_analysis[['duration', 'profit']].describe()
+        df_describe = df_describe.round(2)
+
+        df_describe_column_name = df_describe.index.name
+        df_describe_index_values = df_describe.index
+
+        df_describe.insert(loc=0, column=df_describe_column_name, value=df_describe_index_values)
+        fig_order.add_trace(go.Table(header = dict(values=df_describe.columns.tolist()),
+                                     cells=dict(values = df_describe.transpose().values.tolist())),
+                                     row=2,col=1)
+        fig_order.update_layout(title='Order Analysis')
+        if save_dir:
+            fig_order.write_html(f"{save_dir}/order_analysis.html")
     
     def visualize_inventory(self, 
                             bot_data:HistoricalOrderDataManagement,
@@ -54,13 +90,13 @@ class VISUALIZER():
         os.makedirs(save_dir, exist_ok=True)
         os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)
 
-        df_inventory = bot_data.export_df_inventory(save_file=f"{save_dir}/{symbol}/inventory.csv")
+        df_inventory = bot_data.export_df_inventory()
         fig_inventory = go.Figure()
         fig_inventory.add_trace(go.Scatter(x=df_inventory['datetime'], 
                                        y=df_inventory['inventory'], 
                                         mode='lines+markers',
                                        name='Inventory', 
-                                       marker=dict(color='blue', size=20)))
+                                       marker=dict(color='blue', size=15)))
         
         fig_inventory.update_layout(title='Inventory Management',
                                     xaxis_title='Date',
@@ -81,9 +117,7 @@ class VISUALIZER():
         df_long_trade = bot_data.export_df_long_trade()
         df_short_trade = bot_data.export_df_short_trade()
 
-        df_order = bot_data.export_df_order()
-        if save_dir:
-            df_order.to_csv(f"{save_dir}/{symbol}/{symbol}_order.csv")
+        bot_data.export_df_order()
         # Create the line chart with Plotly
         fig = go.Figure(
             data=[go.Scatter(
@@ -132,7 +166,7 @@ class VISUALIZER():
         
         os.makedirs(save_dir, exist_ok=True)
         os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)
-        df_profit = bot_data.export_df_profit_per_day(save_file=f"{save_dir}/{symbol}/{symbol}_profit.csv")
+        df_profit = bot_data.export_df_profit_per_day()
         profit_after_fee = df_profit['profit'] - df_profit['num_trade']*self.fees
         df_profit['profit_after_fee'] = profit_after_fee
         fig_profig = go.Figure()
@@ -163,8 +197,6 @@ class VISUALIZER():
             return df[(df['ask'] != 0) & (df['bid'] != 0)]
 
         fitlered_df = remove_zero_value(df_spread.copy())
-        if save_dir:
-            df_spread.to_csv(f"{save_dir}/{symbol}/{symbol}_ask_bid.csv")
 
         fig_ask_bid = go.Figure()
         fig_ask_bid.add_trace(go.Scatter(x=df['datetime'], y=df['price'], mode='lines', name='Tick Prices'))

@@ -8,6 +8,8 @@ def maximum_drawdown(returns):
     returns (np.array): The returns of the strategy.
     """
 
+    if len(returns) == 0:
+        return 0
     cum_returns = np.cumprod(1+returns)
 
     peak = np.maximum.accumulate(cum_returns)

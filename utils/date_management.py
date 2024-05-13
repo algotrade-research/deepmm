@@ -41,6 +41,9 @@ def make_date_from_string(input_date):
     return date_obj
 
 def check_two_stringtime_greater_thresh(time1, time2, thresh):
+    if len(time1) == 0 or len(time2) == 0:
+        print("Invalid time format", "time1:", time1, "time2:", time2)
+        return False
     date_obj1 = make_date_from_string(time1)
     date_obj2 = make_date_from_string(time2)
     return (date_obj2 - date_obj1).seconds > thresh
