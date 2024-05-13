@@ -14,8 +14,7 @@ from utils.date_management import check_stringtime_greater_closetime, \
                                     check_two_string_is_same_day
 
 class Bot:
-    def __init__(self, opts):
-
+    def __init__(self, opts, logger=None):
         self.opts = opts
         self.close_at = opts['close_at']
         self.start_at = opts['start_at']
@@ -35,6 +34,7 @@ class Bot:
         self.previous_tick = Tickdata()
         self.current_tick = Tickdata()
         self.next_tick = Tickdata()
+        self.logger = logger
 
     def _init_capcity(self):
         self.monthly_tick_data = HistoricalTickdata()
@@ -51,9 +51,11 @@ class Bot:
                 self.inventory.increase_inventory()
             elif order.position_side == PositionSide.SHORT:
                 self.inventory.decrease_inventory()
-            
             self.track_order(order)
             self.track_inventory(order.datetime, self.inventory.current_inventory)
+
+            if self.logger:
+                self.logger.info(f"Send Order: {order.order_id} at {order.datetime} with price {order.price_size.price} and size {order.price_size.size}")
         return status
 
     def send_cancel_order(self, order_id):
@@ -132,6 +134,9 @@ class Bot:
         price = self.current_tick.price
         next_tick_price = self.next_tick.price
         
+        if self.logger:
+            self.logger.info(f"Tickdata: {datetime} with price {price}")
+
         if not check_two_string_is_same_day(prev_time, datetime):
             self.is_waiting_new_day = False
 
@@ -205,7 +210,10 @@ class Bot:
         self.init_capacity_every_month()
         for t , (datetime, price) in enumerate(datasets, start=0):
             self.fit_tickdata(Tickdata(datetime, price))
-        
+    
+    def get_daily_history(self):
+        return deepcopy(self.daily_historical_data_order)
+
     def get_monthly_history(self):
         return deepcopy(self.monthly_history_data_order)
     

@@ -8,9 +8,8 @@ def make_date_to_tickersymbol(date_obj):
     
     year = date_obj.strftime("%y")
     month = date_obj.strftime("%m")
-   
-    
-    if date_obj.time() > maturity_date.time():
+
+    if date_obj > maturity_date:
         month = str(int(month) + 1)
         # format month is two digit, examples 01, 02, 03 ,04 ,05
         month = month.zfill(2)

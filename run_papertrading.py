@@ -1,5 +1,6 @@
 import redis
 import json
+import pytz
 from datetime import datetime
 from pathlib import Path
 
@@ -12,6 +13,25 @@ from utils.loading_file import load_yaml
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]
+
+TIMEZONE = pytz.timezone('Asia/Ho_Chi_Minh')
+
+# handle pricehub quote
+def redis_message_handler(redis_message):
+
+  quote = json.loads(redis_message['data'])
+  cur_price = quote['latest_matched_price']
+
+  # check if cur_price updated yet
+  if cur_price is None:
+    return
+
+  datetime_now = datetime.fromtimestamp(quote['timestamp']).astimezone(TIMEZONE).time()
+
+
+  
+  
+
 
 
 def main():
@@ -37,11 +57,7 @@ def main():
     F1M_CHANNEL = f'HNXDS:{tickersymbol}'
     print(F1M_CHANNEL)
     
-
-    # test if redis return correct latest quote of VN30F1M
-    redis_message = redis_client.get(F1M_CHANNEL)
-    quote_dict = json.loads(redis_message)
-    print(quote_dict)
+    pipeline.run_papertrading(redis_client)
 
 if __name__ == "__main__":
     main()

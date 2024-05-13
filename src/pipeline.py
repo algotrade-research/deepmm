@@ -1,5 +1,6 @@
 import os
 import time
+import pytz
 import json
 import logging
 import optuna
@@ -8,13 +9,14 @@ import pandas as pd
 from datetime import datetime
 
 from src.bot.bot import Bot
+from src.data.data_type import Tickdata
 from src.metrics import sharpe_ratio, maximum_drawdown
 from src.utils.visualizer import VISUALIZER
 
 from utils.loading_file import load_csv
 from utils.date_management import get_num_days_to_maturity, make_date_to_tickersymbol
 
-
+TIMEZONE = pytz.timezone('Asia/Ho_Chi_Minh')
 class Pipeline():
     def __init__(self, opts):
         self.opts = opts
@@ -162,10 +164,6 @@ class Pipeline():
         for symbol in distinct_symbols:
             start_time_1m = time.time()
             monthly_data = datasets[datasets['tickersymbol'] == symbol].drop(['tickersymbol'], axis=1).to_numpy()
-
-            first_date = monthly_data[0][0]
-            num_day = get_num_days_to_maturity(symbol, first_date)
-            self.opts['PIPELINE']['params']['M'] = num_day
             
             logger.info(f"Start fitting model for {symbol}")
             model.fit(monthly_data)
@@ -197,34 +195,50 @@ class Pipeline():
         
         logger.info(f"result on {type_data} with profit_return {profit}    sharpe {sharpe}   mdd {max_drawdown_value}")
         return profit, sharpe, max_drawdown_value
+
     
-    def init_opts_papetrading(self, type_data = 'papertrading', name_logger='papertrading'):
-        logger = self._init_logging(self.opts['PIPELINE']['params']['save_dir']/type_data/'log.txt', name=name_logger)
-        visualizer = VISUALIZER(fees=self.opts['PIPELINE']['params']['fee'])
-        model = Bot(self.opts['PIPELINE']['params'])
-
-    def redis_message_handler(redis_message):
-
-        quote = json.loads(redis_message['data'])
-        cur_price = quote['latest_matched_price']
-
     def run_papertrading(self, redis_client):
-        # check connection to redis OK
-        print(redis_client.ping())
+        logger = self._init_logging(self.opts['PIPELINE']['params']['save_dir']/f'papertrading_log.txt', name='papertrading_logger')
+        model = Bot(self.opts['PIPELINE']['params'], logger=logger)
+        visualizer = VISUALIZER(fees=self.opts['PIPELINE']['params']['fee'])
+        current_date = datetime.now()
+        tickersymbol = make_date_to_tickersymbol(current_date)
+        current_symbol = None
 
-        # current_date = datetime.now()
-        # tickersymbol = make_date_to_tickersymbol(current_date)
-        # F1M_CHANNEL = f'HNXDS:{tickersymbol}'
+        def redis_message_handler(redis_message, current_symbol=current_symbol, model=model, logger=logger, visualizer=visualizer, tickersymbol=tickersymbol):
+            
+            quote = json.loads(redis_message['data'])
+            cur_price = quote['latest_matched_price']
 
-        # pub_sub = redis_client.pubsub()
+            if cur_price is None:
+                return
+            now = datetime.fromtimestamp(quote['timestamp']).astimezone(TIMEZONE)
 
-        # # subcribe to channel F1M channel
-        # # register a callback function to handle message received from redis-server
-        # pub_sub.psubscribe(**{F1M_CHANNEL: redis_message_handler})
-        # pubsub_thread = pub_sub.run_in_thread(sleep_time=1)
+            if current_symbol is None:
+                current_symbol = tickersymbol
+                model.init_capacity_every_month()   
+            elif current_symbol != tickersymbol:
+                visualizer.visualize_monthly_data(bot_data=model.get_monthly_history(),
+                                                  bot_data_market_time_price=model.monthly_tick_data,
+                                                  symbol=current_symbol,
+                                                  save_dir=self.opts['PIPELINE']['params']['save_dir']/'papertrading')
+                self._log_results(logger,model, current_symbol)
+                self.report_monthly_data(model, save_dir=self.opts['PIPELINE']['params']['save_dir']/'papertrading'/current_symbol)
+                model.init_capacity_every_month()
 
-        # time.sleep(60)
+            model.fit_tickdata(Tickdata(now, cur_price))
 
-        # pubsub_thread.stop()
+        
 
-        # print('FINISH.')
+        F1M_CHANNEL = f'HNXDS:{tickersymbol}'
+
+        pub_sub = redis_client.pubsub()
+        pub_sub.psubscribe(**{F1M_CHANNEL: redis_message_handler})
+        # subcribe to channel F1M channel
+        # register a callback function to handle message received from redis-server
+        while True:
+            pubsub_thread = pub_sub.run_in_thread(sleep_time=1)
+
+            time.sleep(60)
+
+            # pubsub_thread.stop()
