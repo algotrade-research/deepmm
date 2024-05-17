@@ -35,7 +35,6 @@ class OrderManagementSystem:
 
         if order.order_type == OrderType.MARKET:
             return 2
-
         return 0
 
     def send_cancel_order(self, order_id):
@@ -44,3 +43,13 @@ class OrderManagementSystem:
                 self.waiting_orders.pop(i)
                 return True
         return False
+    
+    def check_order_status(self, order, next_tick_price):
+        if order.position_side == PositionSide.LONG and next_tick_price < order.price_size.price:
+            return 2
+        elif order.position_side == PositionSide.SHORT and next_tick_price > order.price_size.price:
+            return 2
+        return 1
+
+    def clear_waiting_orders(self):
+        self.waiting_orders = []

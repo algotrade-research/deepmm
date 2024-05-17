@@ -175,21 +175,26 @@ class HistoricalOrderDataManagement():
         list_order_position = deepcopy(self.historical_order)
         
         open_times = []
+        filled_open_times = []
         close_times = []
+        filled_close_times = []
         open_prices = []
         close_prices = []
         open_sides = []
         close_sides = []
         profits = []
         durations = []
+        filled_durations = []
 
         while len(list_order_position) > 0:
             open_order = list_order_position.pop(0)
             for close_order in list_order_position:
                 if close_order.position_side != open_order.position_side:
                     open_times.append(open_order.datetime)
+                    filled_open_times.append(open_order.filled_datetime)
                     open_prices.append(open_order.price_size.price)
                     close_times.append(close_order.datetime)
+                    filled_close_times.append(close_order.filled_datetime)
                     close_prices.append(close_order.price_size.price)
                     open_sides.append(open_order.position_side)
                     close_sides.append(close_order.position_side)
@@ -198,13 +203,17 @@ class HistoricalOrderDataManagement():
                         profit = (open_order.price_size.price - close_order.price_size.price) * open_order.price_size.size - fees*2
                     profits.append(profit)
                     durations.append((make_date_from_string(close_order.datetime) - make_date_from_string(open_order.datetime)).total_seconds())
+                    filled_durations.append((make_date_from_string(close_order.filled_datetime) - make_date_from_string(open_order.filled_datetime)).total_seconds())
                     list_order_position.remove(close_order)
                     break
         
         df = pd.DataFrame({
         "open_time": open_times,
+        "filled_open_time": filled_open_times,
         "close_time": close_times,
+        "filled_close_time": filled_close_times,
         "duration": durations,
+        "filled_duration": filled_durations,
         "open_price": open_prices,
         "close_price": close_prices,
         "profit": profits,

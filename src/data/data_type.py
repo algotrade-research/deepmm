@@ -90,17 +90,25 @@ class DataOrder:
                  order_type: OrderType=OrderType.MARKET, 
                  position_side: PositionSide=PositionSide.NONE, 
                  datetime: str=""):
+        
+        """ 
+            datetime: str ; which is the datetime of the open position order
+        """
         self.order_id  = order_id
         self.price_size = price_size
         self.order_type = order_type
         self.position_side = position_side
         self.datetime = datetime
+        self.filled_datetime = ""
     
     def is_empty(self):
         return (self.price_size.price == 0 or self.price_size.size == 0 or self.datetime == "" or self.position_side == PositionSide.NONE)
 
     def __repr__(self):
-        return f"Order: {self.datetime} {self.price_size} {self.position_side} {self.order_type}"
+        return f"Order: {self.datetime} {self.filled_datetime} {self.price_size} {self.position_side} {self.order_type}"
 
     def to_list(self):
         return [self.datetime, self.price_size.price, self.price_size.size, self.position_side, self.order_type]
+
+    def update_filled_datetime(self, datetime):
+        self.filled_datetime = datetime

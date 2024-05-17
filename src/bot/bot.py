@@ -45,12 +45,16 @@ class Bot:
         self.total_history_data_order = HistoricalOrderDataManagement()
     
     def send_order(self, order, next_tick_price):
+        if self.inventory.check_capacity(order) == False:
+            return 0
         status = self.broker.send_order(order, next_tick_price)
         if status == 2:
             if order.position_side == PositionSide.LONG:
                 self.inventory.increase_inventory()
             elif order.position_side == PositionSide.SHORT:
                 self.inventory.decrease_inventory()
+
+            order.update_filled_datetime(order.datetime)
             self.track_order(order)
             self.track_inventory(order.datetime, self.inventory.current_inventory)
 
@@ -58,14 +62,29 @@ class Bot:
                 self.logger.info(f"Send Order: {order.order_id} at {order.datetime} with price {order.price_size.price} and size {order.price_size.size}")
         return status
 
-    def send_cancel_order(self, order_id):
-        self.broker.send_cancel_order(order_id)
-
-
-    def check_then_cancel_order(self, datetime):
+    def check_then_cancel_order(self, datetime, next_tick_price):
+        # check waiting order
         for order in self.broker.get_waiting_orders():
-            if check_two_stringtime_greater_thresh(order.datetime, datetime, 10):
-                self.send_cancel_order(order.order_id)
+            status = self.broker.check_order_status(order, next_tick_price)
+            if status == 2:
+                
+                if order.position_side == PositionSide.LONG:
+                    self.inventory.increase_inventory()
+                elif order.position_side == PositionSide.SHORT:
+                    self.inventory.decrease_inventory()
+                order.update_filled_datetime(datetime)
+                self.track_order(order)
+                self.track_inventory(order.datetime, self.inventory.current_inventory)
+                self.broker.send_cancel_order(order.order_id)
+                if self.logger:
+                    self.logger.info(f"Filled Order: {order.order_id} at {order.datetime} with price {order.price_size.price} and size {order.price_size.size}")
+
+        # cancel order if it's not filled and it's over the time step
+        for order in self.broker.get_waiting_orders():
+            if check_two_stringtime_greater_thresh(order.datetime, datetime, self.time_step):
+                self.broker.send_cancel_order(order.order_id)
+                if self.logger:
+                    self.logger.info(f"Cancel Order: {order.order_id} at {order.datetime} with price {order.price_size.price} and size {order.price_size.size}")
     
 
     def track_order(self, order):
@@ -117,6 +136,7 @@ class Bot:
         self.daily_historical_data_order = HistoricalOrderDataManagement()
         self.monthly_history_data_order = HistoricalOrderDataManagement()
         self.monthly_tick_data = HistoricalTickdata()
+        self.model.reset_T()
 
     def queue_support_tickdata(self, tickdata:Tickdata):
         self.previous_tick = self.current_tick
@@ -133,9 +153,6 @@ class Bot:
         datetime = self.current_tick.datetime
         price = self.current_tick.price
         next_tick_price = self.next_tick.price
-        
-        if self.logger:
-            self.logger.info(f"Tickdata: {datetime} with price {price}")
 
         if not check_two_string_is_same_day(prev_time, datetime):
             self.is_waiting_new_day = False
@@ -167,6 +184,7 @@ class Bot:
                 self.track_inventory(datetime, self.inventory.current_inventory)
 
                 self.daily_historical_data_order = HistoricalOrderDataManagement()
+                self.broker.clear_waiting_orders()
                 self.is_waiting_new_day = True
             return
         
@@ -176,7 +194,7 @@ class Bot:
                                                                 inventory=self.inventory,
                                                                 history_price=self.history_price)
 
-        self.check_then_cancel_order(datetime)
+        self.check_then_cancel_order(datetime, next_tick_price)
 
         if delta_bid != 0:
             delta_bid = round(delta_bid, 1)
@@ -219,86 +237,3 @@ class Bot:
     
     def get_total_history(self):
         return deepcopy(self.total_history_data_order)
-    
-    # def fit_full_dataset(self, datasets):
-
-    #     self.init_capacity_every_month()
-    #     is_waiting_new_day = False
-    #     prev_time = datasets[0][0]
-    #     self.track_inventory(datetime=datasets[0][0], inventory=self.inventory.current_inventory)
-    #     self.track_profit(date=datasets[0][0], profit=0, num_trade=0)
-        
-    #     next_tick_price = datasets[2][1]
-    #     for t , (datetime, price) in enumerate(datasets[:-1], start=0):
-    #         next_tick_price = datasets[t+1][1]
-
-    #         if not check_two_string_is_same_day(prev_time, datetime):
-    #             is_waiting_new_day = False
-
-    #         if check_stringtime_less_starttime(datetime, self.start_at):
-    #             self.track_data(datetime=datetime, price=price, delta_bid=price, delta_ask=price, reserv_price=price)
-    #             continue
-
-    #         if self.count_history_day < self.historical_window_size:
-    #             self.history_price = np.append(self.history_price, price)
-    #             if check_stringtime_greater_closetime(datetime, self.close_at) and is_waiting_new_day == False:
-    #                 self.count_history_day += 1
-    #                 self.track_inventory(datetime, self.inventory.current_inventory)
-    #                 is_waiting_new_day = True
-    #                 prev_time = datetime
-    #             self.track_data(datetime=datetime, price=price, delta_bid=price, delta_ask=price, reserv_price=price)
-    #             continue
-            
-    #         if check_stringtime_greater_closetime(datetime, self.close_at):
-    #             ## It's closing time at end day
-    #             self._auto_close_position(price, datetime, next_tick_price)
-    #             self.track_data(datetime=datetime, price=price, delta_bid=price, delta_ask=price, reserv_price=price)
-    #             # Take End day profit
-    #             if self.inventory.current_inventory == 0 and not is_waiting_new_day:
-    #                 atc_price = price
-    #                 end_day_profit = self.daily_historical_data_order.calculate_revenue(atc_price)
-    #                 num_trade = self.daily_historical_data_order.get_num_order()
-    #                 self.track_profit(end_day_profit, num_trade, datetime)
-    #                 self.track_inventory(datetime, self.inventory.current_inventory)
-    #                 self.daily_historical_data_order = HistoricalOrderDataManagement()
-    #                 is_waiting_new_day = True
-    #             continue
-
-    #         self.history_price[:-1] = self.history_price[1:]; self.history_price[-1] = price
-    #         delta_bid, delta_ask, reserv_price = self.model.signal(datetime=datetime, 
-    #                                                                price=price, 
-    #                                                                inventory=self.inventory,
-    #                                                                history_price=self.history_price)
-
-    #         self.check_then_cancel_order(datetime)
-
-    #         if delta_bid != 0:
-    #             order_id = next(self.count_order_ids)
-    #             long_order = DataOrder(order_id=order_id,
-    #                                    price_size=PriceSize(price=delta_bid, size = 1),
-    #                                    position_side=PositionSide.LONG,
-    #                                    order_type=OrderType.LIMIT,
-    #                                    datetime=datetime)
-                
-    #             if self.broker.previous_orders.is_empty():
-    #                 self.send_order(long_order, next_tick_price)
-    #             elif check_two_stringtime_greater_thresh(self.broker.previous_orders.datetime, datetime, self.time_step):
-    #                 self.send_order(long_order, next_tick_price)
-            
-    #         if delta_ask != 0:
-    #             order_id = next(self.count_order_ids)
-    #             short_order = DataOrder(order_id=order_id,
-    #                                     price_size=PriceSize(price=delta_ask, size = 1),
-    #                                     position_side=PositionSide.SHORT,
-    #                                     order_type=OrderType.LIMIT,
-    #                                     datetime=datetime)
-                
-    #             if self.broker.previous_orders.is_empty():
-    #                 self.send_order(short_order, next_tick_price)
-    #             elif check_two_stringtime_greater_thresh(self.broker.previous_orders.datetime, datetime, self.time_step):
-    #                 self.send_order(short_order, next_tick_price)
-
-    #         self.track_data(datetime, price, delta_bid, delta_ask, reserv_price)
-    #         prev_time = datetime
-        
-    #     self.track_inventory(datetime, self.inventory.current_inventory)

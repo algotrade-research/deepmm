@@ -57,7 +57,9 @@ class VISUALIZER():
 
         for i, row in df_order_analysis.iterrows():
             df_order_analysis.loc[i,'open_time'] = row['open_time'][:-4]
+            df_order_analysis.loc[i,'filled_open_time'] = row['filled_open_time'][:-4]
             df_order_analysis.loc[i,'close_time'] = row['close_time'][:-4]
+            df_order_analysis.loc[i,'filled_close_time'] = row['filled_close_time'][:-4]
        
         os.makedirs(save_dir, exist_ok=True)
         fig_order = plotly.subplots.make_subplots(rows=2, cols=1,
@@ -69,7 +71,7 @@ class VISUALIZER():
                                     cells=dict(values=df_order_analysis.transpose().values.tolist())),
                                     row=1, col=1)
         
-        df_describe = df_order_analysis[['duration', 'profit']].describe()
+        df_describe = df_order_analysis[['duration', 'filled_duration', 'profit']].describe()
         df_describe = df_describe.round(2)
 
         df_describe_column_name = df_describe.index.name

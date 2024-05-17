@@ -25,4 +25,13 @@ class InventoryManagement():
     def init_inventory(self):
         self.current_inventory = 0
 
+    def check_capacity(self, order: DataOrder):
+        if order.position_side == PositionSide.LONG:
+            if self.current_inventory + order.price_size.size > self.maximum_inventory:
+                return False
+        elif order.position_side == PositionSide.SHORT:
+            if self.current_inventory - order.price_size.size < -self.maximum_inventory:
+                return False
+        return True
+
     
