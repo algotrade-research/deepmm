@@ -1,6 +1,8 @@
-from copy import deepcopy
+
 import numpy as np
 import itertools
+from tqdm import tqdm
+from copy import deepcopy
 
 from src.strategy.asmodel import PureMM
 from src.broker.order_management_system import OrderManagementSystem
@@ -155,6 +157,7 @@ class Bot:
         next_tick_price = self.next_tick.price
 
         if not check_two_string_is_same_day(prev_time, datetime):
+            self.track_inventory(datetime, self.inventory.current_inventory)
             self.is_waiting_new_day = False
 
         if check_stringtime_less_starttime(datetime, self.start_at):
@@ -226,7 +229,7 @@ class Bot:
 
     def fit(self, datasets):
         self.init_capacity_every_month()
-        for t , (datetime, price) in enumerate(datasets, start=0):
+        for t , (datetime, price) in tqdm(enumerate(datasets, start=0), desc="Fitting offline data"):
             self.fit_tickdata(Tickdata(datetime, price))
     
     def get_daily_history(self):

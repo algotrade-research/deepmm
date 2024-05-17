@@ -16,9 +16,6 @@ def make_date_to_tickersymbol(date_obj):
         if month == "13":
             month = "01"
             year = str(int(year) + 1)
-    else:
-        print(date_obj)
-        print(maturity_date)
 
     return f"VN30F{year}{month}"
 
@@ -47,11 +44,11 @@ def check_two_stringtime_greater_thresh(time1, time2, thresh):
     date_obj2 = make_date_from_string(time2)
     return (date_obj2 - date_obj1).seconds > thresh
 
-def check_stringtime_greater_closetime(date1, date2):
-    date_obj1 = make_date_from_string(date1)
-    string_date2 = date_obj1.strftime("%Y-%m-%d") + " " + date2
-    date_obj2 = make_date_from_string(string_date2)
-    return date_obj1.time() > date_obj2.time()
+def check_stringtime_greater_closetime(datetime, closetimealgo):
+    datetime = make_date_from_string(datetime)
+    string_closetime = datetime.strftime("%Y-%m-%d") + " " + closetimealgo
+    datetime_closing = make_date_from_string(string_closetime)
+    return datetime.time() > datetime_closing.time()
 
 def check_stringtime_less_starttime(date1, date2):
     date_obj1 = make_date_from_string(date1)
@@ -97,4 +94,4 @@ def get_num_days_to_maturity(tickerymbol, date):
     maturity_date = get_maturity_date_from_symbol(tickerymbol)
     date_obj = make_date_from_string(date)
     maturity_date_obj = datetime.strptime(maturity_date, "%Y-%m-%d")
-    return (maturity_date_obj - date_obj).days
+    return (maturity_date_obj - date_obj).days + 1

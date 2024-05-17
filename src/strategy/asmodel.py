@@ -17,6 +17,7 @@ class PureMM:
 
     def signal(self, datetime, price, inventory, history_price):
         self.T = self.T - 2.5e-5
+        # self.T -= 1e-3
         if self.T < 0:
             self.T = 0
 
@@ -25,9 +26,9 @@ class PureMM:
         s = price
         reserv_price = s - inventory.previous_inventory * self.gamma * (sigma ** 2) * (self.T)						 # Mid Price estimation
         spread = self.gamma * (sigma ** 2) * (self.T) + (2/self.gamma) * math.log(1 + (self.gamma/self.k))	 # Spread estimation
-
-        delta_bid = reserv_price - (spread/2.0 * self.num_of_spread)		# bid
-        delta_ask = reserv_price + (spread/2.0 * self.num_of_spread)		# ask
+        spread = spread / 2.0
+        delta_bid = reserv_price - (spread * self.num_of_spread)		# bid
+        delta_ask = reserv_price + (spread * self.num_of_spread)		# ask
         
         return delta_bid, delta_ask, reserv_price
 

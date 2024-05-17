@@ -108,7 +108,6 @@ class Pipeline():
         if save_dir:
             df.to_csv(save_dir/'result.csv', index=False)
         return df
-    
 
     def optuna_optimizing(self, datasets):
         gamma_list = self.opts['OPTIMIZER']['params']['gamma']['values']
@@ -126,7 +125,6 @@ class Pipeline():
         
         return objective
     
-
     def fit(self):
         optimizer = BruteForceOptimizer(self.opts['OPTIMIZER'])  
         best_params = None      
@@ -225,8 +223,6 @@ class Pipeline():
                 model.init_capacity_every_month()
 
             model.fit_tickdata(Tickdata(now, cur_price))
-
-        
 
         F1M_CHANNEL = f'HNXDS:{tickersymbol}'
 
