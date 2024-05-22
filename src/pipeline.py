@@ -130,7 +130,7 @@ class Pipeline():
         best_params = None      
         # optimization
         if self.opts['PIPELINE']['params']['is_optimization']:
-            best_params, best_sharpe = optimizer.optimize_sharpe(self.train_data, self.run_dataset)
+            best_params, best_sharpe = optimizer.optimize_sharpe_parallel(self.train_data, self.run_dataset)
 
         # Start fitting with best params
         self.run_dataset(self.train_data, type_data='train', params=best_params)
