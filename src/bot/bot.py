@@ -13,7 +13,8 @@ from src.data.history_management import HistoricalOrderDataManagement, Historica
 from utils.date_management import check_stringtime_greater_closetime, \
                                     check_two_stringtime_greater_thresh, \
                                     check_stringtime_less_starttime, \
-                                    check_two_string_is_same_day
+                                    check_two_string_is_same_day, \
+                                    get_maturity_date
 
 class Bot:
     def __init__(self, opts, logger=None):
@@ -138,7 +139,7 @@ class Bot:
         self.daily_historical_data_order = HistoricalOrderDataManagement()
         self.monthly_history_data_order = HistoricalOrderDataManagement()
         self.monthly_tick_data = HistoricalTickdata()
-        self.model.reset_T()
+        self.model.reset()
 
     def queue_support_tickdata(self, tickdata:Tickdata):
         self.previous_tick = self.current_tick
@@ -162,6 +163,9 @@ class Bot:
 
         if check_stringtime_less_starttime(datetime, self.start_at):
                 self.track_data(datetime=datetime, price=price, delta_bid=price, delta_ask=price, reserv_price=price)
+                if get_maturity_date(datetime) == 20:
+                    self.model.set_start_time(datetime)
+                    print(f"Start time: {datetime}")
                 return
 
         if self.count_history_day < self.historical_window_size:

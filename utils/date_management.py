@@ -1,5 +1,12 @@
 from datetime import datetime, timedelta
 
+def calculate_distance_milis(datetime, start_time):
+        if type(datetime) is str:
+            datetime = make_date_from_string(datetime)
+        if type(start_time) is str:
+            start_time = make_date_from_string(start_time)
+        return (datetime - start_time).total_seconds() * 1000.0
+
 def make_date_to_tickersymbol(date_obj):
     if type(date_obj) is str:
         date_obj = make_date_from_string(date_obj)
@@ -74,6 +81,15 @@ def is_same_week_as_third_thursday(input_date):
     return start_of_week <= date_obj <= end_of_week
 
 def get_maturity_date(date):
+    """Get the third thursday of the month of the given date
+    Args:
+        date (datetime): _description_
+
+    Returns:
+        datetime: _description_
+    """
+    if type(date) is str:
+        date = make_date_from_string(date)
     month = date.strftime("%m")
     year = date.strftime("%y")
     first_day_of_month = datetime.strptime(f"20{year}-{month}-01", "%Y-%m-%d")

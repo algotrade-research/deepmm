@@ -13,3 +13,5 @@ dependencies:
     - einops
     - plotly
     - psycopg2-binary
+    - optuna
+    - redis

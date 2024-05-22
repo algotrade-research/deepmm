@@ -11,9 +11,9 @@ PIPELINE:
     
   # Market Making Parameters
     num_of_spread: 2.5
-    gamma: 0.5 # risk aversion
-    historical_window_size: 25 # number of days used to calculate the historical volatility
-    min_second_time_step: 10
+    gamma: 0.2 # risk aversion
+    historical_window_size: 10 # number of days used to calculate the historical volatility
+    min_second_time_step: 5
     close_at: "14:20:45"
     start_at: "09:00:00"
 

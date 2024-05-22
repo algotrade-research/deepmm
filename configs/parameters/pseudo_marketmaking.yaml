@@ -6,7 +6,7 @@ PIPELINE:
     fee: 0.125
     # pipeline parameters
     save_dir: "runs/market_making"
-    is_optimization: False
+    is_optimization: True
     maximum_inventory: 35
     
   # Market Making Parameters
@@ -27,19 +27,19 @@ OPTIMIZER:
 
     gamma:
       type: "float"
-      values: [0.1, 0.2, 0.3, 0.4, 0.5]
+      values: [0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 1.5, 2.0, 2.5] # 9 hyperparameters
 
     num_of_spread:
       type: "float"
-      values: [1.0, 1.5, 2.0, 2.5, 3.0]
+      values: [1.0, 1.5, 2.0, 2.5, 3.0] # 5 hyperparameters
     
     historical_window_size:
       type: "int"
-      values: [5, 10, 15, 20, 25]
+      values: [5, 10, 15, 20, 25] # 5 hyperparameters
     
     min_second_time_step:
       type: "int"
-      values: [5, 10, 20]
+      values: [5, 10, 20, 30, 60, 120] # 6 hyperparameters
 
 DATASET:
   TRAIN:

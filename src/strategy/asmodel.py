@@ -1,7 +1,8 @@
 from typing import Any
 import numpy as np
 import math
-from utils.date_management import get_num_days_to_maturity, make_date_to_tickersymbol, get_maturity_date_from_symbol
+
+from utils.date_management import calculate_distance_milis
 
 class PureMM:
     def __init__(self, opts):
@@ -11,16 +12,30 @@ class PureMM:
         self.k = 1.5				# probability of market order arrival
         self.historical_window_size = opts['historical_window_size']
         self.num_of_spread = opts['num_of_spread']
+        self.counter = 0
+        self.start_time = None
     
-    def reset_T(self):
+    def set_start_time(self, start_time):
+        self.start_time = start_time
+    
+    def reset(self):
         self.T = 1
+        self.counter = 1
+        
+    def _calculate_new_T(self, counter, lambda_):
+        T_prime = lambda_ / (lambda_ + counter)
+        return T_prime
 
     def signal(self, datetime, price, inventory, history_price):
-        self.T = self.T - 2.5e-5
-        # self.T -= 1e-3
+        if self.start_time is None:
+            self.start_time = datetime
+            return 0, 0, 0
+        self.counter += 1
+        lambda_ = calculate_distance_milis(datetime, self.start_time)/self.counter
+        T_prime = self._calculate_new_T(self.counter, lambda_)
+        self.T = min(self.T, T_prime)
         if self.T < 0:
             self.T = 0
-
         # calculate volatility
         sigma = np.std(history_price)
         s = price
