@@ -1,7 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 import multiprocessing as mp
-
+from utils.path_management import increment_path
 
 def optimize_worker(datasets, params, run_dataset):
             profit, sharpe, mdd = run_dataset(datasets, 
@@ -22,7 +22,6 @@ class BruteForceOptimizer():
         num_of_spread_list = self.opts['params']['num_of_spread']['values']
         historical_window_size_list = self.opts['params']['historical_window_size']['values']
         min_second_time_step_list = self.opts['params']['min_second_time_step']['values']
-
         params = []
         for gamma in gamma_list:
             for num_of_spread in num_of_spread_list:
@@ -32,7 +31,7 @@ class BruteForceOptimizer():
                             'gamma': gamma,
                             'num_of_spread': num_of_spread,
                             'historical_window_size': historical_window_size,
-                            'min_second_time_step': min_second_time_step
+                            'min_second_time_step': min_second_time_step,
                         })
         return params
     
@@ -42,6 +41,7 @@ class BruteForceOptimizer():
         return params
     
     def optimize_sharpe_parallel(self, datasets, run_dataset, num_processes=4):
+        mp.set_start_method('spawn')   
         with mp.Pool(processes=num_processes) as pool:
             all_params = self.combination_params
             # Use pool.starmap to distribute work across processes
@@ -72,7 +72,6 @@ class BruteForceOptimizer():
 
         for i in tqdm(range(len(self.combination_params))):
             params = self.sample_params()
-
             profit, sharpe, mdd = run_dataset(datasets, 
                                               type_data='train', 
                                               is_visualize=False,

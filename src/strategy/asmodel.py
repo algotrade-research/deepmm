@@ -27,16 +27,20 @@ class PureMM:
         return T_prime
 
     def signal(self, datetime, price, inventory, history_price):
-        if self.start_time is None:
-            self.start_time = datetime
-            return 0, 0, 0
-        self.counter += 1
-        lambda_ = calculate_distance_milis(datetime, self.start_time)/self.counter
-        T_prime = self._calculate_new_T(self.counter, lambda_)
-        self.T = min(self.T, T_prime)
-        if self.T < 0:
-            self.T = 0
+        # if self.start_time is None:
+        #     self.start_time = datetime
+        #     return 0, 0, 0
+        # self.counter += 1
+        # lambda_ = calculate_distance_milis(datetime, self.start_time)/self.counter
+        # T_prime = self._calculate_new_T(self.counter, lambda_)
+        # self.T = min(self.T, T_prime)
+        # if self.T < 0:
+        #     self.T = 0
         # calculate volatility
+        
+        self.T -= 2.5e-5
+        if self.T < 0:
+            self.T = 1e-6
         sigma = np.std(history_price)
         s = price
         reserv_price = s - inventory.previous_inventory * self.gamma * (sigma ** 2) * (self.T)						 # Mid Price estimation

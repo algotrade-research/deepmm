@@ -6,7 +6,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import yaml
 import json
 from pathlib import Path
-from utils.loading_file import load_yaml
+from utils.file_management import load_yaml
 from utils.path_management import increment_path
 
 
@@ -73,9 +73,8 @@ class Opts(ArgumentParser):
 
         config = Config(args.config)
         config = self.override(config, args.opt)
-        save_path = increment_path(Path(config["PIPELINE"]["params"]["save_dir"])/"exp",mkdir=True)  # increment run
+        save_path = increment_path(Path(config["PIPELINE"]["params"]["save_dir"])/"exp", mkdir=False)  # increment run
         config["PIPELINE"]["params"]["save_dir"] = save_path
-        print(f"The output will be saved to {save_path}")
         return config
 
     def _parse_opt(self, opts):

@@ -7,15 +7,18 @@ import optuna
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from pathlib import Path
 
 from src.bot.bot import Bot
-from src.optimizers.bruteforce_optimizer import BruteForceOptimizer
+from src.optimizers.optuna_optimizer import Optimzer
 from src.data.data_type import Tickdata
 from src.metrics import sharpe_ratio, maximum_drawdown
 from src.utils.visualizer import VISUALIZER
 
-from utils.loading_file import load_csv
+from utils.file_management import load_csv
 from utils.date_management import make_date_to_tickersymbol
+from utils.path_management import increment_path
+from utils.file_management import write_yaml
 
 TIMEZONE = pytz.timezone('Asia/Ho_Chi_Minh')
 class Pipeline():
@@ -24,15 +27,6 @@ class Pipeline():
         self.train_data = load_csv(opts['DATASET']['TRAIN']['csv_file'])
         self.val_data = load_csv(opts['DATASET']['VAL']['csv_file'])
         self.test_data = load_csv(opts['DATASET']['TEST']['csv_file'])
-        self._init_save_dir()
-        self.opts.save_yaml(self.opts['PIPELINE']['params']['save_dir']/'config.yaml')
-
-    def _init_save_dir(self):
-        os.makedirs(self.opts['PIPELINE']['params']['save_dir'], exist_ok=True)
-        os.makedirs(self.opts['PIPELINE']['params']['save_dir']/'train', exist_ok=True)
-        os.makedirs(self.opts['PIPELINE']['params']['save_dir']/'val', exist_ok=True)
-        os.makedirs(self.opts['PIPELINE']['params']['save_dir']/'test', exist_ok=True)
-
 
     def _init_logging(self, log_file='log.txt', name='logger'):
         """ Initialize logging
@@ -126,33 +120,42 @@ class Pipeline():
         return objective
     
     def fit(self):
-        optimizer = BruteForceOptimizer(self.opts['OPTIMIZER'])  
+        optimizer = Optimzer(self.opts['OPTIMIZER'])  
         best_params = None      
         # optimization
         if self.opts['PIPELINE']['params']['is_optimization']:
-            best_params, best_sharpe = optimizer.optimize_sharpe_parallel(self.train_data, self.run_dataset)
+            best_params, best_sharpe = optimizer.optimize_sharpe(self.train_data, self.run_dataset, self.opts)
 
         # Start fitting with best params
         self.run_dataset(self.train_data, type_data='train', params=best_params)
         self.run_dataset(self.val_data, type_data='val', params=best_params)
           
 
-    def run_dataset(self, datasets, type_data='train', is_visualize=True, params=None):
+    def run_dataset(self, datasets, type_data='train', is_visualize=True, params=None, prefix_logger=""):
         tmp_opts = self.opts.copy()
-
         save_dir = tmp_opts['PIPELINE']['params']['save_dir']
-        name_logger = str(save_dir.parents[0].stem)
-        name_logger = f"{type_data}_logger_{name_logger}" 
-        logger = self._init_logging(tmp_opts['PIPELINE']['params']['save_dir']/type_data/'log.txt', name=name_logger)
-        visualizer = VISUALIZER(fees=tmp_opts['PIPELINE']['params']['fee'])
-        distinct_symbols = datasets['tickersymbol'].unique()
+        if "exp" in str(save_dir):
+            save_dir = save_dir.parents[0]
+        save_dir = increment_path(save_dir/"exp", mkdir=True)
+        tmp_opts['PIPELINE']['params']['save_dir'] = save_dir
+
+        write_yaml(tmp_opts, save_dir/'config.yaml')
         
         if params:
             tmp_opts['PIPELINE']['params']['gamma'] = params['gamma']
             tmp_opts['PIPELINE']['params']['num_of_spread'] = params['num_of_spread']
             tmp_opts['PIPELINE']['params']['historical_window_size'] = params['historical_window_size']
             tmp_opts['PIPELINE']['params']['min_second_time_step'] = params['min_second_time_step']
-
+        
+        save_dir = tmp_opts['PIPELINE']['params']['save_dir']
+        name_logger = prefix_logger+str(save_dir.parents[0].stem)
+        name_logger = f"{type_data}_logger_{name_logger}" 
+        
+        os.makedirs(save_dir/type_data, exist_ok=True)
+        logger = self._init_logging(tmp_opts['PIPELINE']['params']['save_dir']/type_data/'log.txt', name=name_logger)
+        visualizer = VISUALIZER(fees=tmp_opts['PIPELINE']['params']['fee'])
+        distinct_symbols = datasets['tickersymbol'].unique()
+        
         model = Bot(tmp_opts['PIPELINE']['params'])
         logger.info("Start fitting model")
         logger.info("with parameters: ")
@@ -167,6 +170,7 @@ class Pipeline():
             end_time_1m = time.time()
 
             logger.info(f"Execution time for {symbol}: {end_time_1m - start_time_1m}")
+            logger.info("params: ", tmp_opts['PIPELINE']['params'])
             self._log_results(logger,model, symbol)
             
             self.report_monthly_data(model, save_dir=tmp_opts['PIPELINE']['params']['save_dir']/type_data/symbol)

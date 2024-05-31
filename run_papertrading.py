@@ -8,7 +8,7 @@ from pathlib import Path
 from src.pipeline import Pipeline
 from utils.date_management import make_date_to_tickersymbol
 from utils.argument_management import Opts
-from utils.loading_file import load_yaml
+from utils.file_management import load_yaml
 
 
 FILE = Path(__file__).resolve()

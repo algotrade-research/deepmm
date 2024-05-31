@@ -1,10 +1,18 @@
 from datetime import datetime, timedelta
 
-def calculate_distance_milis(datetime, start_time):
+TRADE_MILIS = 19800000 # number of miliseconds from 9h to 14h30
+FULL_DAY_MILIS = 86280000 # number of miliseconds from 0h01 to 23h59
+NON_TRADE_MILIS = FULL_DAY_MILIS - TRADE_MILIS
+
+def calculate_distance_milis(datetime, start_time, is_subtract_trade_time=False):
         if type(datetime) is str:
             datetime = make_date_from_string(datetime)
+            
         if type(start_time) is str:
             start_time = make_date_from_string(start_time)
+        num_days = (datetime - start_time).days
+        if is_subtract_trade_time:
+            return (datetime - start_time).total_seconds() * 1000.0 - (TRADE_MILIS*num_days)
         return (datetime - start_time).total_seconds() * 1000.0
 
 def make_date_to_tickersymbol(date_obj):

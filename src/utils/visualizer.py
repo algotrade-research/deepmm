@@ -33,6 +33,7 @@ class VISUALIZER():
         fig.add_trace(go.Scatter(x=profit_df['datetime'], y=pnl_accum_after_fee, mode='lines', name='PnL Accumulation After Trading Fee', line=dict(color='green')))
         fig.update_layout(title=name)
         fig.write_html(f"{save_dir}/pnl_accum.html")
+        fig.write_image(f"{save_dir}/pnl_accum.png")
 
     def visualize_monthly_data(self, 
                                bot_data:HistoricalOrderDataManagement,
@@ -84,6 +85,7 @@ class VISUALIZER():
         fig_order.update_layout(title='Order Analysis')
         if save_dir:
             fig_order.write_html(f"{save_dir}/order_analysis.html")
+            fig_order.write_image(f"{save_dir}/order_analysis.png")
     
     def visualize_inventory(self, 
                             bot_data:HistoricalOrderDataManagement,
@@ -105,6 +107,7 @@ class VISUALIZER():
                                     yaxis_title='Inventory')
         if save_dir:
             fig_inventory.write_html(f"{save_dir}/{symbol}/{symbol}_inventory.html")
+            fig_inventory.write_image(f"{save_dir}/{symbol}/{symbol}_inventory.png")
 
     def visualize_trend_order(self,
                               bot_data:HistoricalOrderDataManagement,
@@ -160,6 +163,7 @@ class VISUALIZER():
         # Display the chart
         if save_dir:
             fig.write_html(f"{save_dir}/{symbol}/{symbol}_trend.html")
+            fig.write_image(f"{save_dir}/{symbol}/{symbol}_trend.png")
 
     def visualize_profit(self,  
                          bot_data:HistoricalOrderDataManagement,
@@ -171,11 +175,12 @@ class VISUALIZER():
         df_profit = bot_data.export_df_profit_per_day()
         profit_after_fee = df_profit['profit'] - df_profit['num_trade']*self.fees
         df_profit['profit_after_fee'] = profit_after_fee
-        fig_profig = go.Figure()
-        fig_profig.add_trace(go.Bar(x=df_profit['datetime'], y=df_profit['profit'], name='Profit Without Trading Fee', marker_color='blue'))
-        fig_profig.add_trace(go.Bar(x=df_profit['datetime'], y=df_profit['profit_after_fee'], name='Profit After Fee', marker_color='green'))
+        fig_profit = go.Figure()
+        fig_profit.add_trace(go.Bar(x=df_profit['datetime'], y=df_profit['profit'], name='Profit Without Trading Fee', marker_color='blue'))
+        fig_profit.add_trace(go.Bar(x=df_profit['datetime'], y=df_profit['profit_after_fee'], name='Profit After Fee', marker_color='green'))
         if save_dir:
-            fig_profig.write_html(f"{save_dir}/{symbol}/{symbol}_profit.html")
+            fig_profit.write_html(f"{save_dir}/{symbol}/{symbol}_profit.html")
+            fig_profit.write_image(f"{save_dir}/{symbol}/{symbol}_profit.png")
 
     def visualize_bid_ask_spread(self,
                                  bot_data:HistoricalOrderDataManagement,
@@ -227,3 +232,4 @@ class VISUALIZER():
         
         if save_dir:
             fig_ask_bid.write_html(f"{save_dir}/{symbol}/{symbol}_ask_bid.html")
+            fig_ask_bid.write_image(f"{save_dir}/{symbol}/{symbol}_ask_bid.png")
