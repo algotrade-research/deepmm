@@ -15,9 +15,19 @@ class VISUALIZER():
     def __init__(self, fees: float) -> None:
         self.fees = fees
 
-    def visualize_total_data(self, total_data, save_dir: str, name="bruh"):
-        os.makedirs(save_dir, exist_ok=True)
+    def visualize_total_data(self, total_data:HistoricalOrderDataManagement,
+                             save_dir: str, 
+                             name="tmp"):
+        """ Using for visualize total trading data (from beginning to end of trading period)
 
+        Args:
+            total_data (HistoricalOrderDataManagement)
+            save_dir (str): path to save the visualization
+            name (str, optional): name of the visualization. Defaults to "tmp".
+        """
+        
+        os.makedirs(save_dir, exist_ok=True)
+        
         profit_df = total_data.export_df_profit_per_day()
         profit = profit_df['profit'].to_numpy()
         pnl_accum = np.cumsum(profit)
@@ -33,7 +43,6 @@ class VISUALIZER():
         fig.add_trace(go.Scatter(x=profit_df['datetime'], y=pnl_accum_after_fee, mode='lines', name='PnL Accumulation After Trading Fee', line=dict(color='green')))
         fig.update_layout(title=name)
         fig.write_html(f"{save_dir}/pnl_accum.html")
-        fig.write_image(f"{save_dir}/pnl_accum.png")
 
     def visualize_monthly_data(self, 
                                bot_data:HistoricalOrderDataManagement,
@@ -52,9 +61,14 @@ class VISUALIZER():
         self.visualize_table_order_analysis(bot_data, save_dir/symbol)
 
     def visualize_table_order_analysis(self, bot_data:HistoricalOrderDataManagement, save_dir:str):
+        """Visualizing the order analysis in table format
+
+        Args:
+            bot_data (HistoricalOrderDataManagement)
+            save_dir (str)
+        """
         df_order_analysis = bot_data.export_df_order_analysis()
         df_order_analysis = df_order_analysis.round(2)
-
 
         for i, row in df_order_analysis.iterrows():
             df_order_analysis.loc[i,'open_time'] = row['open_time'][:-4]
@@ -85,12 +99,19 @@ class VISUALIZER():
         fig_order.update_layout(title='Order Analysis')
         if save_dir:
             fig_order.write_html(f"{save_dir}/order_analysis.html")
-            fig_order.write_image(f"{save_dir}/order_analysis.png")
     
     def visualize_inventory(self, 
                             bot_data:HistoricalOrderDataManagement,
                             symbol:str,
                             save_dir:str):
+        """Visualizing the inventory management
+
+        Args:
+            bot_data (HistoricalOrderDataManagement)
+            symbol (str): tickersymbol
+            save_dir (str): path to save the visualization
+        """
+        
         os.makedirs(save_dir, exist_ok=True)
         os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)
 
@@ -114,6 +135,15 @@ class VISUALIZER():
                               bot_data_market_timeprice: HistoricalTickdata,
                               symbol: str,
                               save_dir:str):
+        """Visualizing the tick price trend with long and short trades
+
+        Args:
+            bot_data (HistoricalOrderDataManagement)
+            bot_data_market_timeprice (HistoricalTickdata)
+            symbol (str)
+            save_dir (str)
+        """
+    
         os.makedirs(save_dir, exist_ok=True)
         os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)
 
@@ -170,6 +200,9 @@ class VISUALIZER():
                          symbol:str,
                          save_dir:str,):
         
+        """Visualizing the profit per day       
+        """
+        
         os.makedirs(save_dir, exist_ok=True)
         os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)
         df_profit = bot_data.export_df_profit_per_day()
@@ -187,6 +220,14 @@ class VISUALIZER():
                                  bot_data_market_timeprice:HistoricalTickdata, 
                                  symbol: str,
                                  save_dir: str):
+        """Visualizing the bid-ask spread
+
+        Args:
+            bot_data (HistoricalOrderDataManagement)
+            bot_data_market_timeprice (HistoricalTickdata)
+            symbol (str)
+            save_dir (str)
+        """
         # Visualize Spread
         os.makedirs(save_dir, exist_ok=True)
         os.makedirs(f"{save_dir}/{symbol}", exist_ok=True)

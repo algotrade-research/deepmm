@@ -6,7 +6,7 @@ class Optimzer():
         self.opts = opts
         self.study = optuna.create_study(
                                 study_name=opts['params']['study_name'], 
-                                sampler=optuna.samplers.BruteForceSampler(),
+                                sampler=optuna.samplers.BruteForceSampler(),   # possible to change optuna.samplers.TPESampler(seed=10)
                                 storage=opts['params']['storage'],
                                 load_if_exists=opts['params']['load_if_exists'],
                                 direction='maximize')

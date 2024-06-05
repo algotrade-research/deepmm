@@ -26,7 +26,25 @@ class PureMM:
         T_prime = lambda_ / (lambda_ + counter)
         return T_prime
 
-    def signal(self, datetime, price, inventory, history_price):
+    def signal(self, datetime:str, 
+                     price:float, 
+                     inventory: int, 
+                     history_price: np.ndarray) -> tuple:
+        """_summary_
+
+        Args:
+            datetime (str): datetime of the current price
+            price (float): current price
+            inventory (int): inventory of the agent
+            history_price (np.ndarray): array of historical prices
+
+        Returns:
+            tuple: (delta_bid, delta_ask, reserv_price)
+            which delta_bid is the bid price, 
+            delta_ask is the ask price, 
+            and reserv_price is the reservation price
+        """
+        
         # if self.start_time is None:
         #     self.start_time = datetime
         #     return 0, 0, 0
@@ -43,7 +61,7 @@ class PureMM:
             self.T = 1e-6
         sigma = np.std(history_price)
         s = price
-        reserv_price = s - inventory.previous_inventory * self.gamma * (sigma ** 2) * (self.T)						 # Mid Price estimation
+        reserv_price = s - inventory * self.gamma * (sigma ** 2) * (self.T)						 # Mid Price estimation
         spread = self.gamma * (sigma ** 2) * (self.T) + (2/self.gamma) * math.log(1 + (self.gamma/self.k))	 # Spread estimation
         spread = spread / 2.0
         delta_bid = reserv_price - (spread * self.num_of_spread)		# bid

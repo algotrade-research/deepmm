@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from src.bot.bot import Bot
-from src.optimizers.optuna_optimizer import Optimzer
+from src.optimizers.bruteforce_optimizer import BruteForceOptimizer
 from src.data.data_type import Tickdata
 from src.metrics import sharpe_ratio, maximum_drawdown
 from src.utils.visualizer import VISUALIZER
@@ -120,11 +120,11 @@ class Pipeline():
         return objective
     
     def fit(self):
-        optimizer = Optimzer(self.opts['OPTIMIZER'])  
+        optimizer = BruteForceOptimizer(self.opts['OPTIMIZER'])  
         best_params = None      
         # optimization
         if self.opts['PIPELINE']['params']['is_optimization']:
-            best_params, best_sharpe = optimizer.optimize_sharpe(self.train_data, self.run_dataset, self.opts)
+            best_params, best_sharpe = optimizer.optimize_sharpe_parallel(self.train_data, self.run_dataset, self.opts)
 
         # Start fitting with best params
         self.run_dataset(self.train_data, type_data='train', params=best_params)

@@ -116,7 +116,16 @@ class Bot:
         self.total_history_data_order.append_reserv_price(reserv_price)
 
 
-    def _auto_close_position(self, price, datetime, next_tick_price):
+    def _auto_close_position(self, datetime:str, 
+                                   price:float, 
+                                   next_tick_price:float):
+        """Auto close position in specific time
+
+        Args:
+            datetime (str): time to close position
+            price (float): current price
+            next_tick_price (float): simulate fill price
+        """
         while self.inventory.current_inventory < 0:
             long_order = DataOrder(
                                 order_id=next(self.count_order_ids),
@@ -180,7 +189,7 @@ class Bot:
 
         if check_stringtime_greater_closetime(datetime, self.close_at):
             ## It's closing time at end day
-            self._auto_close_position(price, datetime, next_tick_price)
+            self._auto_close_position(datetime, price, next_tick_price)
             self.track_data(datetime=datetime, price=price, delta_bid=price, delta_ask=price, reserv_price=price)
             # Take End day profit
             if self.inventory.current_inventory == 0 and not self.is_waiting_new_day:
@@ -198,7 +207,7 @@ class Bot:
         self.history_price[:-1] = self.history_price[1:]; self.history_price[-1] = price
         delta_bid, delta_ask, reserv_price = self.model.signal(datetime=datetime, 
                                                                 price=price, 
-                                                                inventory=self.inventory,
+                                                                inventory=self.inventory.previous_inventory,
                                                                 history_price=self.history_price)
 
         self.check_then_cancel_order(datetime, next_tick_price)
