@@ -40,7 +40,7 @@ class BruteForceOptimizer():
         self.index_params += 1
         return params
     
-    def optimize_sharpe_parallel(self, datasets, run_dataset, num_processes=4):
+    def optimize_sharpe_parallel(self, datasets, run_dataset, opts, num_processes=4):
         mp.set_start_method('spawn')   
         with mp.Pool(processes=num_processes) as pool:
             all_params = self.combination_params
@@ -65,7 +65,7 @@ class BruteForceOptimizer():
                 
         return best_params, best_sharpe
 
-    def optimize_sharpe(self, datasets, run_dataset):
+    def optimize_sharpe(self, datasets, run_dataset, opts):
 
         best_sharpe = -np.inf
         best_params = None
