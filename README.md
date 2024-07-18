@@ -10,6 +10,7 @@ We tried out a variety of different strategies and market making around the midp
 
 
 # How to Run the models
+You also run the experiment on [colab](https://colab.research.google.com/drive/1gnMGsCedhIbKEm4xRO7utDPsQAFcxTXm?usp=sharing)
 
 ## Install Enviroments
 You'll need install enviroments by file `requirements.txt`
