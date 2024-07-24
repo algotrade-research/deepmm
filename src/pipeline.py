@@ -120,10 +120,10 @@ class Pipeline():
         return objective
     
     def fit(self):
-        optimizer = BruteForceOptimizer(self.opts['OPTIMIZER'])  
-        best_params = None      
+        best_params = None
         # optimization
         if self.opts['PIPELINE']['params']['is_optimization']:
+            optimizer = BruteForceOptimizer(self.opts['OPTIMIZER'])
             best_params, best_sharpe = optimizer.optimize_sharpe_parallel(self.train_data, self.run_dataset, self.opts)
 
         # Start fitting with best params
