@@ -9,25 +9,23 @@ We tried out a variety of different strategies and market making around the midp
 - Avellaneda-Stoikov Market Making Model. This model allowed us to adjust for inventory and volatility in a much more profitable way. Refer `src/strategy/market_making.py`
 
 
-# How to Run the models
-You also run the experiment on [colab](https://colab.research.google.com/drive/1gnMGsCedhIbKEm4xRO7utDPsQAFcxTXm?usp=sharing)
+# Getting started
 
-## Install Enviroments
-You'll need install enviroments by file `requirements.txt`
-```bash
-pip install -r requirements.txt
-```
-## Data Preparation
 
-Preparing dataset through query data from database.
-```bash
-python download_data_from_db.py
-```
-## Run models
-Create an example configs like `configs/parameters/pseudo_marketmaking` then run:
-```bash
-python run.py -c [path_to_config_file]
-```
+For detailed user guides and advanced guides, please refer to our documentation:
+* User guides:
+    <details>
+    <summary>Details</summary>
+        <ul>
+        <li> <a href='./docs/en/user_guides/installation.md'>Installation</a></li>
+        <li> <a href='./docs/en/user_guides/preparing_dataset.md'>Data preparation</a></li>
+        <li> <a href='./docs/en/user_guides/run.md'>Run</a></li>
+        </ul>
+    </details>
+
+
+We also provide the experiment on [colab](https://colab.research.google.com/drive/1gnMGsCedhIbKEm4xRO7utDPsQAFcxTXm?usp=sharing)
+
 
 # References
 - [Avellaneda M. & Stoikov S. (2006). High Frequency Trading in a Limit Order Book](https://www.researchgate.net/publication/24086205_High_Frequency_Trading_in_a_Limit_Order_Book)
