@@ -4,7 +4,7 @@ This section guides you through installing the necessary software to run the pip
 1. Open your terminal or command prompt.
 2. Run the following command to create a conda environment based on the specifications in a file named `enviroments.yaml`
 ```bash
-conda env create -f enviroments.yaml
+conda env create -f environments.yaml
 ```
 This command will create a new conda environment with all the required dependencies listed in the `enviroments.yaml` file.
 
