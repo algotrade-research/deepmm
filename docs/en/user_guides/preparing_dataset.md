@@ -12,10 +12,14 @@ Here's what each column means:
 - datetime: The timestamp for each piece of data.
 - price: The price of the asset at that timestamp.
 - tickersymbol: The symbol for the asset (e.g., VN30F2304).
-## Downloading Data from the algotrade Database
+## Downloading Data from algotrade public datasets
+A comprehensive dataset, meticulously curated by algotrade experts, is available for download though [link](https://drive.google.com/drive/folders/1ZJzFUcxd5mdt8MA9r7lhx3MY1zw1uqdY?usp=sharing). This dataset contains a vast quantity of data points specifically designed to serve as a benchmark for scientific experimentation.
+
+## Downloading Data from the algotrade database (if applicable)
+To gain access to the algotrade database, please contact us.
 <h4>Step 1: Setting Up Database Access</h4>
 
-To download data from the algotrade database, you'll need to create a file to store your login credentials. Create a file named db_account.yaml inside the directory config/usr/. Here's an example of what the file should look like:
+To download data from the algotrade database, you'll need to create a file to store your login credentials. Create a file named db_account.yaml inside the directory `configs/usr/`. Here's an example of what the file should look like:
 ```yaml
 host: ####      # Replace with host ip of algotrade
 port: ####      # Replace with actual port
