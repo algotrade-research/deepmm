@@ -1,0 +1,5 @@
+host: ####      # Replace with host ip of algotrade
+port: ####      # Replace with actual port
+database: ####  # Replace with actual database of algotrade
+user: ####      # Replace with actual username
+pass: ####      # Replace with your actual password

@@ -1,0 +1,18 @@
+PIPELINE:
+  name: "market making"
+  version: "1.0.0"
+  description: "Implementation of Avellaneda-Stoikov's approach"
+  params:
+    fee: 0.125
+    # pipeline parameters
+    save_dir: "runs/papertrading"
+    is_optimization: False
+    maximum_inventory: 35
+    
+  # Market Making Parameters
+    num_of_spread: 2.5
+    gamma: 0.2 # risk aversion
+    historical_window_size: 10 # number of days used to calculate the historical volatility
+    min_second_time_step: 5
+    close_at: "14:20:45"
+    start_at: "09:00:00"

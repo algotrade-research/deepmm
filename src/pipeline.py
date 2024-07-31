@@ -24,9 +24,10 @@ TIMEZONE = pytz.timezone('Asia/Ho_Chi_Minh')
 class Pipeline():
     def __init__(self, opts):
         self.opts = opts
-        self.train_data = load_csv(opts['DATASET']['TRAIN']['csv_file'])
-        self.val_data = load_csv(opts['DATASET']['VAL']['csv_file'])
-        self.test_data = load_csv(opts['DATASET']['TEST']['csv_file'])
+        if 'DATASET' in opts:
+            self.train_data = load_csv(opts['DATASET']['TRAIN']['csv_file'])
+            self.val_data = load_csv(opts['DATASET']['VAL']['csv_file'])
+            self.test_data = load_csv(opts['DATASET']['TEST']['csv_file'])
 
     def _init_logging(self, log_file='log.txt', name='logger'):
         """ Initialize logging
@@ -198,21 +199,24 @@ class Pipeline():
 
     
     def run_papertrading(self, redis_client):
+        os.makedirs(self.opts['PIPELINE']['params']['save_dir'], exist_ok=True)
         logger = self._init_logging(self.opts['PIPELINE']['params']['save_dir']/f'papertrading_log.txt', name='papertrading_logger')
         model = Bot(self.opts['PIPELINE']['params'], logger=logger)
         visualizer = VISUALIZER(fees=self.opts['PIPELINE']['params']['fee'])
         current_date = datetime.now()
         tickersymbol = make_date_to_tickersymbol(current_date)
         current_symbol = None
-
+        logger.info(f"Start papertrading with tickersymbol {tickersymbol}")
+        logger.info(f"with parameters: {self.opts['PIPELINE']['params']}")
         def redis_message_handler(redis_message, current_symbol=current_symbol, model=model, logger=logger, visualizer=visualizer, tickersymbol=tickersymbol):
             
             quote = json.loads(redis_message['data'])
             cur_price = quote['latest_matched_price']
-
-            if cur_price is None:
-                return
+            
             now = datetime.fromtimestamp(quote['timestamp']).astimezone(TIMEZONE)
+            if cur_price is None:
+                logger.info(f"There is no price update yet at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+                return
 
             if current_symbol is None:
                 current_symbol = tickersymbol
