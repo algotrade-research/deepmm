@@ -20,6 +20,7 @@ For detailed user guides and advanced guides, please refer to our documentation:
         <li> <a href='./docs/en/user_guides/installation.md'>Installation</a></li>
         <li> <a href='./docs/en/user_guides/preparing_dataset.md'>Data preparation</a></li>
         <li> <a href='./docs/en/user_guides/run.md'>Run</a></li>
+        <li> <a href='./docs/en/user_guides/papertrading.md'>Papertrading</a></li>
         </ul>
     </details>
 
