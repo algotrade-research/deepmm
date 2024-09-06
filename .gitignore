@@ -48,3 +48,8 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+*.zip
+runs/*
+.idea/*
+configs/usr/db_account.yaml
