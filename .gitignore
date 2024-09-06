@@ -53,3 +53,4 @@ docs/_build/
 runs/*
 .idea/*
 configs/usr/db_account.yaml
+configs/usr/redis_account.yaml

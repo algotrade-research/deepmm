@@ -18,3 +18,5 @@ tenacity==8.2.3
 tzdata==2023.3
 vnstock==0.2.8.7
 kaleido
+optuna
+plutus --index-url=http://localhost:3141/testuser/devs
