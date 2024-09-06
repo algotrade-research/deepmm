@@ -209,9 +209,10 @@ class Pipeline():
         logger.info(f"Start papertrading with tickersymbol {tickersymbol}")
         logger.info(f"with parameters: {self.opts['PIPELINE']['params']}")
         def redis_message_handler(redis_message, current_symbol=current_symbol, model=model, logger=logger, visualizer=visualizer, tickersymbol=tickersymbol):
-            
+            instrument_id = redis_message['channel'].decode('utf-8')
             quote = json.loads(redis_message['data'])
             cur_price = quote['latest_matched_price']
+            print(cur_price)
             
             now = datetime.fromtimestamp(quote['timestamp']).astimezone(TIMEZONE)
             if cur_price is None:
@@ -220,7 +221,7 @@ class Pipeline():
 
             if current_symbol is None:
                 current_symbol = tickersymbol
-                model.init_capacity_every_month()   
+                model.init_capacity_every_month()
             elif current_symbol != tickersymbol:
                 visualizer.visualize_monthly_data(bot_data=model.get_monthly_history(),
                                                   bot_data_market_time_price=model.monthly_tick_data,
@@ -238,9 +239,8 @@ class Pipeline():
         pub_sub.psubscribe(**{F1M_CHANNEL: redis_message_handler})
         # subcribe to channel F1M channel
         # register a callback function to handle message received from redis-server
+        pubsub_thread = pub_sub.run_in_thread(sleep_time=0.001)
         while True:
-            pubsub_thread = pub_sub.run_in_thread(sleep_time=1)
-
-            time.sleep(60)
+            time.sleep(0.01)
 
             # pubsub_thread.stop()
