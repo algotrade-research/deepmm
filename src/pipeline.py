@@ -256,7 +256,7 @@ class Pipeline():
             data_handler_function=self.data_handler_func,
             subscribed_pattern=f1m_channel_pattern,
             run_in_thread=True,
-            sleep_time=1,
+            sleep_time=0.001,
         )
         redis_datahub.data_handler_list.append(data_handler)
         redis_datahub.start_pubsub()
