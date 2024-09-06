@@ -237,7 +237,7 @@ class Pipeline():
 
         pub_sub = redis_client.pubsub()
         pub_sub.psubscribe(**{F1M_CHANNEL: redis_message_handler})
-        # subcribe to channel F1M channel
+        # subscribe to channel F1M channel
         # register a callback function to handle message received from redis-server
         pubsub_thread = pub_sub.run_in_thread(sleep_time=0.001)
         while True:
