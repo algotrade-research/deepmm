@@ -21,5 +21,3 @@ kaleido
 optuna
 ujson
 redis
---extra-index-url=http://localhost:3141/testuser/dev
-plutus
