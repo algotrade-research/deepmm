@@ -6,8 +6,8 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import yaml
 import json
 from pathlib import Path
-from utils.file_management import load_yaml
-from utils.path_management import increment_path
+from deepmm.utils.file_management import load_yaml
+from deepmm.utils.path_management import increment_path
 
 
 class Config(dict):

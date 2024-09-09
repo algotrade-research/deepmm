@@ -1,7 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 import multiprocessing as mp
-from utils.path_management import increment_path
+
 
 def optimize_worker(datasets, params, run_dataset):
             profit, sharpe, mdd = run_dataset(datasets, 

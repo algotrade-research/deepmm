@@ -7,7 +7,7 @@ import os
 
 import plotly.subplots
 
-from src.data.history_management import HistoricalOrderDataManagement, HistoricalTickdata
+from deepmm.data.history_management import HistoricalOrderDataManagement, HistoricalTickdata
 
 
 class VISUALIZER():

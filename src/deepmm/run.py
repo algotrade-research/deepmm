@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.pipeline import Pipeline
+from deepmm.pipeline import Pipeline
 from utils.argument_management import Opts
 
 FILE = Path(__file__).resolve()

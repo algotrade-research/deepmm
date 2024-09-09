@@ -1,4 +1,4 @@
-from utils.db_connection import DataConnection
+from deepmm.utils.db_connection import DataConnection
 import os
 
 

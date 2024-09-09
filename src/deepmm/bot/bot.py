@@ -4,13 +4,13 @@ import itertools
 from tqdm import tqdm
 from copy import deepcopy
 
-from src.strategy.asmodel import PureMM
-from src.broker.order_management_system import OrderManagementSystem
-from src.data.data_type import DataOrder, PriceSize, PositionSide, OrderType, Tickdata
-from src.data.inventory_management import InventoryManagement
-from src.data.history_management import HistoricalOrderDataManagement, HistoricalTickdata
+from deepmm.strategy.asmodel import PureMM
+from deepmm.broker.order_management_system import OrderManagementSystem
+from deepmm.data.data_type import DataOrder, PriceSize, PositionSide, OrderType, Tickdata
+from deepmm.data.inventory_management import InventoryManagement
+from deepmm.data.history_management import HistoricalOrderDataManagement, HistoricalTickdata
 
-from utils.date_management import check_stringtime_greater_closetime, \
+from deepmm.utils.date_management import check_stringtime_greater_closetime, \
                                     check_two_stringtime_greater_thresh, \
                                     check_stringtime_less_starttime, \
                                     check_two_string_is_same_day, \

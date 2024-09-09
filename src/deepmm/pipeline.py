@@ -1,19 +1,16 @@
 import os
 import time
 import pytz
-import json
 import logging
-import optuna
 import numpy as np
 import pandas as pd
 from datetime import datetime
-from pathlib import Path
 
-from src.bot.bot import Bot
-from src.optimizers.bruteforce_optimizer import BruteForceOptimizer
-from src.data.data_type import Tickdata
-from src.metrics import sharpe_ratio, maximum_drawdown
-from src.utils.visualizer import VISUALIZER
+from deepmm.bot.bot import Bot
+from deepmm.optimizers.bruteforce_optimizer import BruteForceOptimizer
+from deepmm.data.data_type import Tickdata
+from deepmm.metrics import sharpe_ratio, maximum_drawdown
+from deepmm.utils.visualizer import VISUALIZER
 
 from utils.file_management import load_csv
 from utils.date_management import make_date_to_tickersymbol

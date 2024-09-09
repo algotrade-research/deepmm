@@ -1,8 +1,8 @@
 from copy import deepcopy
 import numpy as np
 import pandas as pd
-from src.data.data_type import PositionSide
-from utils.date_management import make_date_from_string
+from deepmm.data.data_type import PositionSide
+from deepmm.utils.date_management import make_date_from_string
 
 class HistoricalTickdata():
     def __init__(self):

@@ -1,5 +1,5 @@
 from copy import deepcopy
-from src.data.data_type import DataOrder, PriceSize, PositionSide, OrderType
+from deepmm.data.data_type import DataOrder, PositionSide, OrderType
 
 class OrderManagementSystem:
     def __init__(self):

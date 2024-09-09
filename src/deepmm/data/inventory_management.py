@@ -1,7 +1,6 @@
-import pandas as pd
-
 from copy import deepcopy
-from src.data.data_type import DataOrder, PositionSide, PriceSize
+from deepmm.data.data_type import DataOrder, PositionSide
+
 
 class InventoryManagement():
     def __init__(self, maximum_inventory):

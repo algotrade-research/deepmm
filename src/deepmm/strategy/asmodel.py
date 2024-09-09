@@ -2,7 +2,6 @@ from typing import Any
 import numpy as np
 import math
 
-from utils.date_management import calculate_distance_milis
 
 class PureMM:
     def __init__(self, opts):
