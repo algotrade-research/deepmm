@@ -213,6 +213,7 @@ class Pipeline():
 
     def data_handler_func(self, instrument: Instrument, internal_data_quote: InternalDataHubQuote):
         cur_price = internal_data_quote.latest_matched_price
+        self.logger.info(f'Current Price: {cur_price}')
 
         now = datetime.fromtimestamp(internal_data_quote.timestamp).astimezone(TIMEZONE)
         if cur_price is None:
@@ -262,3 +263,5 @@ class Pipeline():
         )
         redis_datahub.data_handler_list.append(data_handler)
         redis_datahub.start_pubsub()
+        while True:
+            time.sleep(0.01)
