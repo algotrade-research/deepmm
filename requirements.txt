@@ -20,4 +20,6 @@ vnstock==0.2.8.7
 kaleido
 optuna
 ujson
-plutus --index-url=http://localhost:3141/testuser/dev
+redis
+--extra-index-url=http://localhost:3141/testuser/dev
+plutus

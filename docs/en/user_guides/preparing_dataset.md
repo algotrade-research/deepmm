@@ -15,6 +15,8 @@ Here's what each column means:
 ## Downloading Data from algotrade public datasets
 A comprehensive dataset, meticulously curated by algotrade experts, is available for download though [link](https://drive.google.com/drive/folders/1ZJzFUcxd5mdt8MA9r7lhx3MY1zw1uqdY?usp=sharing). This dataset contains a vast quantity of data points specifically designed to serve as a benchmark for scientific experimentation.
 
+Unzip the dataset into the source root under the folder `datasetATDB`. Inside the folder, there should be three CSV files: `train.csv`, `test.csv`, `val.csv`.
+
 ## Downloading Data from the algotrade database (if applicable)
 To gain access to the algotrade database, please contact us.
 <h4>Step 1: Setting Up Database Access</h4>
