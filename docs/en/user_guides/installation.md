@@ -11,7 +11,6 @@ Or download the zip file through the repo main page: `https://github.com/algotra
 
 ## Create a virtual environment
 After cloning or downloading the source code, go to the source root, open a terminal or a command prompt, then run the following to create a virtual environment.
-### By using venv
 ```bash
 python -m venv .venv
 ```
@@ -27,19 +26,14 @@ Then install the packages by `pip` through the `requirements.txt` file by runnin
 pip install -r requirements.txt
 ```
 
-Now the project can be run.
+## Installing Plutus
+The Plutus source code (in zip file) can be downloaded [here](https://drive.google.com/file/d/1O6i_B6EhxJ1EijGl0MHNPhykG21QD1Zz/view?usp=drive_link).
 
-### Or by using Anaconda
-You can also use Anaconda to create a virtual environment. Refer to the steps below.
-Run the following command to create a conda environment based on the specifications in a file named `enviroments.yaml`
+After downloading the source code, Plutus package can be installed by running:
 ```bash
-conda env create -f environments.yaml
+pip install path/to/the/zip/file/plutus-0.0.1.zip
 ```
 
-This command will create a new conda environment with all the required dependencies listed in the `enviroments.yaml` file.
-Note: You might need to activate the newly created environment before proceeding. Refer to your conda documentation for activation instructions specific to your operating system.
-####  Install Additional Packages (if applicable)
-In some cases, there might be additional packages required that are not included in the `enviroments.yaml` file. These additional packages are likely specified in a separate file named `requirements.txt`.
+Now the project can be run.
 
-If a `requirements.txt` file exists, run the following command to install those additional packages
 
