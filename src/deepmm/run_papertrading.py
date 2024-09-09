@@ -21,14 +21,14 @@ TIMEZONE = pytz.timezone('Asia/Ho_Chi_Minh')
 # handle pricehub quote
 def redis_message_handler(redis_message):
 
-  quote = json.loads(redis_message['data'])
-  cur_price = quote['latest_matched_price']
+    quote = json.loads(redis_message['data'])
+    cur_price = quote['latest_matched_price']
 
-  # check if cur_price updated yet
-  if cur_price is None:
-    return
+    # check if cur_price updated yet
+    if cur_price is None:
+        return
 
-  datetime_now = datetime.fromtimestamp(quote['timestamp']).astimezone(TIMEZONE).time()
+    datetime_now = datetime.fromtimestamp(quote['timestamp']).astimezone(TIMEZONE).time()
 
 
 def main():
