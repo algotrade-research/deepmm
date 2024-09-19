@@ -16,7 +16,7 @@ class Tickdata():
         return False
     
     def __repr__(self):
-        return f"{self.datetime} {self.price}"
+        return f"{self.datetime}-{self.price}"
 
 class OrderType():
     MARKET = 1

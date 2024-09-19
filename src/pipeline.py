@@ -171,7 +171,7 @@ class Pipeline():
         visualizer = VISUALIZER(fees=tmp_opts['PIPELINE']['params']['fee'])
         distinct_symbols = datasets['tickersymbol'].unique()
 
-        model = Bot(tmp_opts['PIPELINE']['params'])
+        model = Bot(tmp_opts['PIPELINE']['params'], logger=logger)
         logger.info("Start fitting model")
         logger.info("with parameters: ")
         logger.info(tmp_opts['PIPELINE']['params'])
@@ -213,11 +213,11 @@ class Pipeline():
 
     def data_handler_func(self, instrument: Instrument, internal_data_quote: InternalDataHubQuote):
         cur_price = internal_data_quote.latest_matched_price
-        self.logger.info(f'Current Price: {cur_price}')
+        # self.logger.info(f'Current Price: {cur_price}')
 
         now = datetime.fromtimestamp(internal_data_quote.timestamp).astimezone(TIMEZONE)
         if cur_price is None:
-            self.logger.info(f"There is no price update yet at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+            # self.logger.info(f"There is no price update yet at {now.strftime('%Y-%m-%d %H:%M:%S')}")
             return
 
         instrument_str = str(instrument)
@@ -239,7 +239,10 @@ class Pipeline():
             )
             self.model.init_capacity_every_month()
 
-        self.model.fit_tickdata(Tickdata(now, cur_price))
+        tick = Tickdata(datetime=now, price=cur_price)
+        if tick.is_empty():
+            return
+        self.model.fit_tickdata(tick)
 
     def run_papertrading(self, redis_datahub: RedisDataHub):
         os.makedirs(self.opts['PIPELINE']['params']['save_dir'], exist_ok=True)
@@ -248,6 +251,7 @@ class Pipeline():
         self.model = Bot(self.opts['PIPELINE']['params'], logger=self.logger)
         self.visualizer = VISUALIZER(fees=self.opts['PIPELINE']['params']['fee'])
         current_date = datetime.now()
+        self.logger.info(f"Start papertrading at {current_date.strftime('%Y-%m-%d %H:%M:%S')}")
         ticker_symbol = make_date_to_tickersymbol(current_date)
         instrument = Instrument(ticker_symbol=ticker_symbol, exchange_code_str='HNXDS')
         self.logger.info(f"Start papertrading with tickersymbol {ticker_symbol}")

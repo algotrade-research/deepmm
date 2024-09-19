@@ -14,7 +14,8 @@ from utils.date_management import check_stringtime_greater_closetime, \
                                     check_two_stringtime_greater_thresh, \
                                     check_stringtime_less_starttime, \
                                     check_two_string_is_same_day, \
-                                    get_maturity_date
+                                    get_maturity_date, \
+                                    auto_convert_string_to_datetime
 
 class Bot:
     def __init__(self, opts, logger=None):
@@ -62,7 +63,8 @@ class Bot:
             self.track_inventory(order.datetime, self.inventory.current_inventory)
 
             if self.logger:
-                self.logger.info(f"Send Order: {order.order_id} at {order.datetime} with price {order.price_size.price} and size {order.price_size.size}")
+                type = "Buy" if order.position_side == PositionSide.LONG else "Sell"
+                self.logger.info(f"Send {type} Order: {order.order_id} at {order.datetime} with price {order.price_size.price} and size {order.price_size.size}")
         return status
 
     def check_then_cancel_order(self, datetime, next_tick_price):
@@ -80,16 +82,17 @@ class Bot:
                 self.track_inventory(order.datetime, self.inventory.current_inventory)
                 self.broker.send_cancel_order(order.order_id)
                 if self.logger:
-                    self.logger.info(f"Filled Order: {order.order_id} at {order.datetime} with price {order.price_size.price} and size {order.price_size.size}")
+                    type = "Buy" if order.position_side == PositionSide.LONG else "Sell"
+                    self.logger.info(f"Filled {type} Order: {order.order_id} at {order.datetime} with price {order.price_size.price} and size {order.price_size.size}")
 
         # cancel order if it's not filled and it's over the time step
         for order in self.broker.get_waiting_orders():
-            if check_two_stringtime_greater_thresh(order.datetime, datetime, self.time_step):
+            # if check_two_stringtime_greater_thresh(order.datetime, datetime, self.time_step):
+            if (datetime-order.datetime).seconds > self.time_step:
                 self.broker.send_cancel_order(order.order_id)
                 if self.logger:
                     self.logger.info(f"Cancel Order: {order.order_id} at {order.datetime} with price {order.price_size.price} and size {order.price_size.size}")
     
-
     def track_order(self, order):
         self.monthly_history_data_order.append_order(order)
         self.total_history_data_order.append_order(order)
@@ -156,13 +159,12 @@ class Bot:
         self.next_tick = tickdata
 
     def fit_tickdata(self, tickdata:Tickdata):
-
         self.queue_support_tickdata(tickdata)
         if self.previous_tick.is_empty() or self.current_tick.is_empty() or self.next_tick.is_empty():
             return
 
         prev_time = self.previous_tick.datetime
-        datetime = self.current_tick.datetime
+        datetime = auto_convert_string_to_datetime(self.current_tick.datetime)
         price = self.current_tick.price
         next_tick_price = self.next_tick.price
 
@@ -176,7 +178,7 @@ class Bot:
                     self.model.set_start_time(datetime)
                     print(f"Start time: {datetime}")
                 return
-
+        
         if self.count_history_day < self.historical_window_size:
             self.history_price = np.append(self.history_price, price)
             if check_stringtime_greater_closetime(datetime, self.close_at) and self.is_waiting_new_day == False:
@@ -186,7 +188,6 @@ class Bot:
 
             self.track_data(datetime=datetime, price=price, delta_bid=price, delta_ask=price, reserv_price=price)
             return
-
         if check_stringtime_greater_closetime(datetime, self.close_at):
             ## It's closing time at end day
             self._auto_close_position(datetime, price, next_tick_price)
@@ -204,7 +205,8 @@ class Bot:
                 self.is_waiting_new_day = True
             return
         
-        self.history_price[:-1] = self.history_price[1:]; self.history_price[-1] = price
+        if len(self.history_price) != 0:
+            self.history_price[:-1] = self.history_price[1:]; self.history_price[-1] = price # assign new tickdata arrival into history price
         delta_bid, delta_ask, reserv_price = self.model.signal(datetime=datetime, 
                                                                 price=price, 
                                                                 inventory=self.inventory.previous_inventory,
@@ -222,7 +224,7 @@ class Bot:
                                     datetime=datetime)
             if self.broker.previous_orders.is_empty():
                 self.send_order(long_order, next_tick_price)
-            elif check_two_stringtime_greater_thresh(self.broker.previous_orders.datetime, datetime, self.time_step):
+            elif (datetime-self.broker.previous_orders.datetime).seconds > self.time_step:
                 self.send_order(long_order, next_tick_price)
         
         if delta_ask != 0:
@@ -235,7 +237,7 @@ class Bot:
                                     datetime=datetime)
             if self.broker.previous_orders.is_empty():
                 self.send_order(short_order, next_tick_price)
-            elif check_two_stringtime_greater_thresh(self.broker.previous_orders.datetime, datetime, self.time_step):
+            elif (datetime-self.broker.previous_orders.datetime).seconds > self.time_step:
                 self.send_order(short_order, next_tick_price)
 
         self.track_data(datetime, price, delta_bid, delta_ask, reserv_price)

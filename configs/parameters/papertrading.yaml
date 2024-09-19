@@ -7,12 +7,12 @@ PIPELINE:
     # pipeline parameters
     save_dir: "runs/papertrading"
     is_optimization: False
-    maximum_inventory: 35
+    maximum_inventory: 100
     
   # Market Making Parameters
-    num_of_spread: 2.5
+    num_of_spread: 0.2
     gamma: 0.2 # risk aversion
-    historical_window_size: 10 # number of days used to calculate the historical volatility
-    min_second_time_step: 5
+    historical_window_size: 0 # number of days used to calculate the historical volatility
+    min_second_time_step: 30
     close_at: "14:20:45"
     start_at: "09:00:00"

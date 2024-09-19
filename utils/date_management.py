@@ -119,3 +119,9 @@ def get_num_days_to_maturity(tickerymbol, date):
     date_obj = make_date_from_string(date)
     maturity_date_obj = datetime.strptime(maturity_date, "%Y-%m-%d")
     return (maturity_date_obj - date_obj).days + 1
+
+
+def auto_convert_string_to_datetime(obj):
+    if type(obj) is str:
+        return make_date_from_string(obj)
+    return obj

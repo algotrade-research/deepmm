@@ -44,23 +44,13 @@ class PureMM:
             delta_ask is the ask price, 
             and reserv_price is the reservation price
         """
-        
-        # if self.start_time is None:
-        #     self.start_time = datetime
-        #     return 0, 0, 0
-        # self.counter += 1
-        # lambda_ = calculate_distance_milis(datetime, self.start_time)/self.counter
-        # T_prime = self._calculate_new_T(self.counter, lambda_)
-        # self.T = min(self.T, T_prime)
-        # if self.T < 0:
-        #     self.T = 0
-        # calculate volatility
-        
+        # Why subtracting T by 2.5e-5?
+        # By observation, the number arrival of tick data per month around 40000.
         self.T -= 2.5e-5
         if self.T < 0:
             self.T = 1e-6
-        sigma = np.std(history_price)
-        s = price
+        sigma = np.std(history_price) if len(history_price) != 0 else 0.01
+        s = float(price)
         reserv_price = s - inventory * self.gamma * (sigma ** 2) * (self.T)						 # Mid Price estimation
         spread = self.gamma * (sigma ** 2) * (self.T) + (2/self.gamma) * math.log(1 + (self.gamma/self.k))	 # Spread estimation
         spread = spread / 2.0
