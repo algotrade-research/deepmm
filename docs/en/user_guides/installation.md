@@ -10,7 +10,10 @@ Please make sure you have the correct credentials/privilege to run that command.
 Or download the zip file through the repo main page: `https://github.com/algotrade-research/deepmm`
 
 ## Create a virtual environment
-After cloning or downloading the source code, go to the source root, open a terminal or a command prompt, then run the following to create a virtual environment.
+
+This project use Python 3.12. Make sure you are using Python 3.12 to create virtual environment.
+
+Run the following to create a virtual environment.
 ```bash
 python -m venv .venv
 ```
