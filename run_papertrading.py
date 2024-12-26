@@ -1,16 +1,14 @@
-import time
-
 import json
 import pytz
 from datetime import datetime
 from pathlib import Path
 
+from plutus.datahub.redis_datahub import RedisDataHub
+
 from src.pipeline import Pipeline
 from utils.date_management import make_date_to_tickersymbol
 from utils.argument_management import Opts
 from utils.file_management import load_yaml
-
-from plutus.datahub.redis_datahub import RedisDataHub
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]
@@ -25,8 +23,6 @@ def redis_message_handler(redis_message):
     # check if cur_price updated yet
     if cur_price is None:
         return
-
-    datetime_now = datetime.fromtimestamp(quote['timestamp']).astimezone(TIMEZONE).time()
 
 
 def main():
