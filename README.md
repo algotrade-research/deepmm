@@ -116,54 +116,59 @@ In this example:
 
 ## Training Pipeline
 
-1. Create a Configuration File: Define the training parameters in a configuration file. A default configuration file 
-   is `configs/parameters/pseudo_marketmaking.yaml`.
-
-2. Run the Training Script: Execute the following command in your terminal, replacing `[path_to_config_file]` with the actual path to your configuration file:
+Run the Training Script: Execute the following command in your terminal, replacing `[path_to_config_file]` with the actual path to your configuration file:
 
 ```bash
-python run.py -c [path_to_config_file]
+python run.py -c configs/parameters/pseudo_marketmaking.yaml
 ```
-This command launches the run.py script with the specified configuration file.
+This command launches the run.py script, performs optimization (brute-force all possible combinations of parameters 
+specified in `OPTIMIZER` section), and use the best parameter combination (highest Sharpe Ratio) to on Training and 
+Validation data.
 
 It is worth noting that running hyper-parameter optimization can take a very long time, depending on data size and 
-number of possible combinations in hyper-parameters (`params` section in file 
-`configs/parameters/pseudo_marketmaking.yaml`). To reduce the running time, one can reduce the number of possible 
-values for each hyper-parameters
+number of possible combinations in hyper-parameters. The default brute-force search will take one week continuously 
+running on a Macbook Pro 2019 laptop. To reduce the running time, one can reduce the number of possible values for each 
+hyper-parameters in `OPTIMIZER` section. 
 
-3. Additional Training Flags: Refer to the documentation [config](config.md) for details on using additional flags during training. These flags allow for further customization of the training process.
+After the optimization phase, one can use the best parameters picked by the optimizer (best sharpe ratio in the 
+training data) for subsequent experimental result (back testing and paper trading).
 
-## Runnning Inference only
+## Back-testing (running inference without searching hyper-parameters)
 If you only want to use the trained model for predictions (inference) without retraining (skipping optimization phase), use the following command:
 ```bash
-python run.py -c [path_to_config_file] -o PIPELINE.params.is_optimization=False
+python run.py -c configs/parameters/pseudo_marketmaking.yaml -o PIPELINE.params.is_optimization=False
 ```
 
 This command runs the pipeline with the parameters defined in the configuration file but disables the optimization phase (`is_optimization=False`). This means the pipeline will use the pre-trained model for inference without searching for better hyperparameters.
 
-# Run papertrading
-This section provides instructions on how to run paper trading.
-## Prepare account paper trading
-### Step 1: Contact for Registration
-Please reach out to the algotrade team to initiate the registration process. They will guide you through the steps and provide you with your account credentials.
-### Step 2: Configure Account Credentials
-Create a file named redis_account.yaml inside the directory configs/usr/. This file will store your account information securely. Here's an example of what the file should look like, replacing the #### placeholders with your actual credentials:
+The back-testing results can be viewed in the accompanied document (file `docs/Algotrade_marketmaking.pdf` section 3).
+
+## Run paper-trading
+
+In this section, we provide instructions to perform the paper trading (use real time price data and make the 
+decision) with our market making strategy. 
+
+### Redis connection setup
+
+The paper trading run will require connection to retrieve real time price. For this reason, one has to setup a 
+connection to Algotrade's Redis. Specifically, one has to create a file `configs/usr/redis_acocunt.yaml` with the 
+following information:
 ```yaml
 host: #### 
 port: ####
 password: ####
 ```
+Please contact Algotrade's team to get information about host, port, and password.
 
+### Paper-trading configuration file
 
-## Run paper trading
+An example of configuration file is `configs/parameters/papertrading.yaml`. Market making parameters will be the 
+parameters you found in the training (back-testing) process.
 
-1. Create a Configuration File: Define the training parameters in a configuration file. An example configuration file can be named `configs/parameters/papertrading.yaml`.
-
-2. Run the Training Script: Execute the following command in your terminal, replacing `[path_to_config_file]` with the actual path to your configuration file:
+### Run paper trading
 
 ```bash
-python run_papertrading.py -c [path_to_config_file]
-##e.g:  python run_papertrading.py -c configs/parameters/papertrading.yaml
+python run_papertrading.py -c configs/parameters/papertrading.yaml  
 ```
 This command launches the `run_papertrading.py` script with the specified configuration file.
 
