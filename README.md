@@ -128,25 +128,29 @@ Validation data.
 It is worth noting that running hyper-parameter optimization can take a very long time, depending on data size and 
 number of possible combinations in hyper-parameters. The default brute-force search will take one week continuously 
 running on a Macbook Pro 2019 laptop. To reduce the running time, one can reduce the number of possible values for each 
-hyper-parameters in `OPTIMIZER` section. 
+hyper-parameters in `OPTIMIZER` section.
 
-After the optimization phase, one can use the best parameters picked by the optimizer (best sharpe ratio in the 
-training data) for subsequent experimental result (back testing and paper trading).
+After the optimization phase, one can use the best parameters picked by the optimizer (best Sharpe ratio in the 
+training data) for subsequent experimental result (back-testing and paper-trading).
 
-## Back-testing (running inference without searching hyper-parameters)
+## Back-testing
+
+One can run the algorithm on historical data using the best parameters by running the following command: 
 If you only want to use the trained model for predictions (inference) without retraining (skipping optimization phase), use the following command:
 ```bash
 python run.py -c configs/parameters/pseudo_marketmaking.yaml -o PIPELINE.params.is_optimization=False
 ```
 
-This command runs the pipeline with the parameters defined in the configuration file but disables the optimization phase (`is_optimization=False`). This means the pipeline will use the pre-trained model for inference without searching for better hyperparameters.
+In the above command, parameters will be specified in the section `PIPELINE` of file `pseudo_marketmaking.yaml`. In 
+addition, we also override the configuration `is_optimization` (set to False) to avoid hyper-parameter 
+search in this phase.
 
 The back-testing results can be viewed in the accompanied document (file `docs/Algotrade_marketmaking.pdf` section 3).
 
 ## Run paper-trading
 
 In this section, we provide instructions to perform the paper trading (use real time price data and make the 
-decision) with our market making strategy. 
+decisions) with our market making strategy. 
 
 ### Redis connection setup
 
