@@ -1,24 +1,24 @@
 import os
 import time
-import pytz
 import logging
+from datetime import datetime
+
+import pytz
 import numpy as np
 import pandas as pd
-from datetime import datetime
+from plutus.core.instrument import Instrument
+from plutus.datahub.redis_datahub import RedisDataHub, RedisDataHandler, InternalDataHubQuote
 
 from src.bot.bot import Bot
 from src.optimizers.bruteforce_optimizer import BruteForceOptimizer
 from src.data.data_type import Tickdata
 from src.metrics import sharpe_ratio, maximum_drawdown
 from src.utils.visualizer import VISUALIZER
-
 from utils.file_management import load_csv
 from utils.date_management import make_date_to_tickersymbol
 from utils.path_management import increment_path
 from utils.file_management import write_yaml
 
-from plutus.core.instrument import Instrument
-from plutus.datahub.redis_datahub import RedisDataHub, RedisDataHandler, InternalDataHubQuote
 
 TIMEZONE = pytz.timezone('Asia/Ho_Chi_Minh')
 
@@ -86,7 +86,7 @@ class Pipeline():
     def report_monthly_data(self, model, save_dir=None):
         os.makedirs(save_dir, exist_ok=True)
         model.get_monthly_history().export_df_inventory(save_file=save_dir / 'inventory.csv')
-        df_order_analysis = model.get_monthly_history().export_df_order_analysis(save_file=save_dir / 'order.csv')
+        _ = model.get_monthly_history().export_df_order_analysis(save_file=save_dir / 'order.csv')
         model.get_monthly_history().export_df_profit_per_day(save_file=save_dir / 'profit.csv')
         bids, asks = model.get_monthly_history().get_bidsask_spread()
         df = model.monthly_tick_data.export_df_market_timeprice()
@@ -114,32 +114,12 @@ class Pipeline():
             df.to_csv(save_dir / 'result.csv', index=False)
         return df
 
-    def optuna_optimizing(self, datasets):
-        gamma_list = self.opts['OPTIMIZER']['params']['gamma']['values']
-        num_of_spread_list = self.opts['OPTIMIZER']['params']['num_of_spread']['values']
-        historical_window_size_list = self.opts['OPTIMIZER']['params']['historical_window_size']['values']
-        min_second_time_step_list = self.opts['OPTIMIZER']['params']['min_second_time_step']['values']
-
-        def objective(trial):
-            self.opts['PIPELINE']['params']['gamma'] = trial.suggest_categorical('gamma', gamma_list)
-            self.opts['PIPELINE']['params']['num_of_spread'] = trial.suggest_categorical('num_of_spread',
-                                                                                         num_of_spread_list)
-            self.opts['PIPELINE']['params']['historical_window_size'] = trial.suggest_categorical(
-                'historical_window_size', historical_window_size_list)
-            self.opts['PIPELINE']['params']['min_second_time_step'] = trial.suggest_categorical('min_second_time_step',
-                                                                                                min_second_time_step_list)
-
-            _, sharpe, _ = self.run_dataset(datasets, type_data='train', is_visualize=False)
-            return sharpe
-
-        return objective
-
     def fit(self):
         best_params = None
         # optimization
         if self.opts['PIPELINE']['params']['is_optimization']:
             optimizer = BruteForceOptimizer(self.opts['OPTIMIZER'])
-            best_params, best_sharpe = optimizer.optimize_sharpe_parallel(self.train_data, self.run_dataset, self.opts)
+            best_params, best_sharpe = optimizer.optimize_sharpe(self.train_data, self.run_dataset)
 
         # Start fitting with best params
         self.run_dataset(self.train_data, type_data='train', params=best_params)
@@ -166,8 +146,10 @@ class Pipeline():
         name_logger = f"{type_data}_logger_{name_logger}"
 
         os.makedirs(save_dir / type_data, exist_ok=True)
-        logger = self._init_logging(tmp_opts['PIPELINE']['params']['save_dir'] / type_data / 'log.txt',
-                                    name=name_logger)
+        logger = self._init_logging(
+            tmp_opts['PIPELINE']['params']['save_dir'] / type_data / 'log.txt',
+            name=name_logger
+        )
         visualizer = VISUALIZER(fees=tmp_opts['PIPELINE']['params']['fee'])
         distinct_symbols = datasets['tickersymbol'].unique()
 
@@ -190,23 +172,29 @@ class Pipeline():
 
             self.report_monthly_data(model, save_dir=tmp_opts['PIPELINE']['params']['save_dir'] / type_data / symbol)
             if is_visualize:
-                visualizer.visualize_monthly_data(bot_data=model.get_monthly_history(),
-                                                  bot_data_market_time_price=model.monthly_tick_data,
-                                                  symbol=symbol,
-                                                  save_dir=tmp_opts['PIPELINE']['params']['save_dir'] / type_data)
+                visualizer.visualize_monthly_data(
+                    bot_data=model.get_monthly_history(),
+                    bot_data_market_time_price=model.monthly_tick_data,
+                    symbol=symbol,
+                    save_dir=tmp_opts['PIPELINE']['params']['save_dir'] / type_data
+                )
 
         name = f"trading_with_maximum_inventory{tmp_opts['PIPELINE']['params']['maximum_inventory']}_windowsize{tmp_opts['PIPELINE']['params']['historical_window_size']}_min_second_time_step{tmp_opts['PIPELINE']['params']['min_second_time_step']}"
         if is_visualize:
-            visualizer.visualize_total_data(model.total_history_data_order,
-                                            tmp_opts['PIPELINE']['params']['save_dir'] / type_data,
-                                            name=name)
+            visualizer.visualize_total_data(
+                model.total_history_data_order,
+                tmp_opts['PIPELINE']['params']['save_dir'] / type_data,
+                name=name
+            )
         self.export_df_result(model, tmp_opts['PIPELINE']['params']['save_dir'] / type_data)
 
-        _, totalProfit, num_order = model.get_total_history().get_statistic()
+        _, total_profit, num_order = model.get_total_history().get_statistic()
 
-        profit, sharpe, max_drawdown_value = self.calculate_performance_score(totalProfit,
-                                                                              num_order,
-                                                                              tmp_opts['PIPELINE']['params']['fee'])
+        profit, sharpe, max_drawdown_value = self.calculate_performance_score(
+            total_profit,
+            num_order,
+            tmp_opts['PIPELINE']['params']['fee']
+        )
 
         logger.info(f"result on {type_data} with profit_return {profit}    sharpe {sharpe}   mdd {max_drawdown_value}")
         return profit, sharpe, max_drawdown_value
