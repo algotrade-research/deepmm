@@ -134,8 +134,7 @@ training data) for subsequent experimental result (back-testing and paper-tradin
 
 ## Back-testing
 
-One can run the algorithm on historical data using the best parameters by running the following command: 
-If you only want to use the trained model for predictions (inference) without retraining (skipping optimization phase), use the following command:
+One can run the algorithm on historical data using the best parameter combination by running the following command:
 ```bash
 python run.py -c configs/parameters/pseudo_marketmaking.yaml -o PIPELINE.params.is_optimization=False
 ```
@@ -154,10 +153,10 @@ decisions) with our market making strategy.
 ### Redis connection setup
 
 The paper trading run will require connection to retrieve real time price. For this reason, one has to setup a 
-connection to Algotrade's Redis. Specifically, one has to create a file `configs/usr/redis_acocunt.yaml` with the 
+connection to Algotrade's Redis. Specifically, one has to create a file `configs/usr/redis_account.yaml` with the 
 following information:
 ```yaml
-host: #### 
+host: ####
 port: ####
 password: ####
 ```
@@ -176,9 +175,6 @@ python run_papertrading.py -c configs/parameters/papertrading.yaml
 This command launches the `run_papertrading.py` script with the specified configuration file.
 
 **Note**: This simulation will receive data during Vietnamese trading hours only. If you want to conduct offline paper trading simulations with test data, please create a separate test dataset and run the run.py script as described in the run.md documentation.
-
-We also provide the experiment on [colab](https://colab.research.google.com/drive/1gnMGsCedhIbKEm4xRO7utDPsQAFcxTXm?usp=sharing)
-
 
 # References
 - [Avellaneda M. & Stoikov S. (2006). High Frequency Trading in a Limit Order Book](https://www.researchgate.net/publication/24086205_High_Frequency_Trading_in_a_Limit_Order_Book)
