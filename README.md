@@ -169,10 +169,15 @@ parameters you found in the training (back-testing) process.
 
 ### Run paper trading
 
+One can run paper-trading with the following command:
 ```bash
 python run_papertrading.py -c configs/parameters/papertrading.yaml  
 ```
-This command launches the `run_papertrading.py` script with the specified configuration file.
+where `configs/parameters/papertrading.yaml` is the configuration file.
+
+At this moment, the paper trading result is only available and viewable in output of the running script. Ideally, 
+the output should be captured and analyzed and presented in a paper trading report. This limitation is because of 
+time constraint of the project and will be a topic for future improvements. 
 
 **Note**: This simulation will receive data during Vietnamese trading hours only. If you want to conduct offline paper trading simulations with test data, please create a separate test dataset and run the run.py script as described in the run.md documentation.
 
