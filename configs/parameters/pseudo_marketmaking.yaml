@@ -18,13 +18,6 @@ PIPELINE:
     start_at: "09:00:00"
 
 OPTIMIZER:
-  name: "custom_optuna"
-  params:
-    n_trials: 50
-    study_name: "market_making"
-    storage: "sqlite:///market_making.db"
-    load_if_exists: True
-
     gamma:
       type: "float"
       values: [0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 1.5, 2.0, 2.5] # 9 hyperparameters
