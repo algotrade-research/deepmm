@@ -1,7 +1,5 @@
 import numpy as np
 from tqdm import tqdm
-import multiprocessing as mp
-from utils.path_management import increment_path
 
 def optimize_worker(datasets, params, run_dataset):
             profit, sharpe, mdd = run_dataset(datasets, 
@@ -10,7 +8,7 @@ def optimize_worker(datasets, params, run_dataset):
                                               params=params)
             return profit, sharpe, mdd, params
 
-class BruteForceOptimizer():
+class BruteForceOptimizer:
     def __init__(self, opts, logger=None):
         self.opts = opts
         self.index_params = 0
@@ -39,43 +37,20 @@ class BruteForceOptimizer():
         params = self.combination_params[self.index_params]
         self.index_params += 1
         return params
-    
-    def optimize_sharpe_parallel(self, datasets, run_dataset, opts, num_processes=4):
-        mp.set_start_method('spawn')   
-        with mp.Pool(processes=num_processes) as pool:
-            all_params = self.combination_params
-            # Use pool.starmap to distribute work across processes
-            results = pool.starmap(optimize_worker, [(datasets, params, run_dataset) for params in all_params])
 
-            # Process results
-            best_sharpe = -np.inf
-            best_params = None
-
-            for profit, sharpe, mdd, params in results:
-                if sharpe > best_sharpe:
-                    best_sharpe = sharpe
-                    best_params = params
-
-                if self.logger is not None:
-                    self.logger.info(f'Params: {params}')
-                    self.logger.info(f'Profit: {profit}')
-                    self.logger.info(f'Sharpe: {sharpe}')
-                    self.logger.info(f'MDD: {mdd}')
-                    self.logger.info('')
-                
-        return best_params, best_sharpe
-
-    def optimize_sharpe(self, datasets, run_dataset, opts):
+    def optimize_sharpe(self, datasets, run_dataset):
 
         best_sharpe = -np.inf
         best_params = None
 
         for i in tqdm(range(len(self.combination_params))):
             params = self.sample_params()
-            profit, sharpe, mdd = run_dataset(datasets, 
-                                              type_data='train', 
-                                              is_visualize=False,
-                                              params=params)
+            profit, sharpe, mdd = run_dataset(
+                datasets,
+                type_data='train',
+                is_visualize=False,
+                params=params
+            )
             
             if sharpe > best_sharpe:
                 best_sharpe = sharpe

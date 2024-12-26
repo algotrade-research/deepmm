@@ -1,4 +1,3 @@
-
 import numpy as np
 import itertools
 from tqdm import tqdm
@@ -9,12 +8,13 @@ from src.broker.order_management_system import OrderManagementSystem
 from src.data.data_type import DataOrder, PriceSize, PositionSide, OrderType, Tickdata
 from src.data.inventory_management import InventoryManagement
 from src.data.history_management import HistoricalOrderDataManagement, HistoricalTickdata
-
-from utils.date_management import check_stringtime_greater_closetime, \
-                                    check_two_stringtime_greater_thresh, \
-                                    check_stringtime_less_starttime, \
-                                    check_two_string_is_same_day, \
-                                    get_maturity_date
+from utils.date_management import (
+    check_stringtime_greater_closetime,
+    check_two_stringtime_greater_thresh,
+    check_stringtime_less_starttime,
+    check_two_string_is_same_day,
+    get_maturity_date,
+)
 
 class Bot:
     def __init__(self, opts, logger=None):
@@ -171,11 +171,11 @@ class Bot:
             self.is_waiting_new_day = False
 
         if check_stringtime_less_starttime(datetime, self.start_at):
-                self.track_data(datetime=datetime, price=price, delta_bid=price, delta_ask=price, reserv_price=price)
-                if get_maturity_date(datetime) == 20:
-                    self.model.set_start_time(datetime)
-                    print(f"Start time: {datetime}")
-                return
+            self.track_data(datetime=datetime, price=price, delta_bid=price, delta_ask=price, reserv_price=price)
+            if get_maturity_date(datetime) == 20:
+                self.model.set_start_time(datetime)
+                print(f"Start time: {datetime}")
+            return
 
         if self.count_history_day < self.historical_window_size:
             self.history_price = np.append(self.history_price, price)
@@ -205,21 +205,24 @@ class Bot:
             return
         
         self.history_price[:-1] = self.history_price[1:]; self.history_price[-1] = price
-        delta_bid, delta_ask, reserv_price = self.model.signal(datetime=datetime, 
-                                                                price=price, 
-                                                                inventory=self.inventory.previous_inventory,
-                                                                history_price=self.history_price)
+        delta_bid, delta_ask, reserv_price = self.model.signal(
+            datetime=datetime,
+            price=price,
+            inventory=self.inventory.previous_inventory,
+            history_price=self.history_price
+        )
 
         self.check_then_cancel_order(datetime, next_tick_price)
 
         if delta_bid != 0:
             delta_bid = round(delta_bid, 1)
             long_order = DataOrder(
-                                    order_id=next(self.count_order_ids),    
-                                    price_size=PriceSize(price=delta_bid, size = 1),
-                                    position_side=PositionSide.LONG,
-                                    order_type=OrderType.LIMIT,
-                                    datetime=datetime)
+                order_id=next(self.count_order_ids),
+                price_size=PriceSize(price=delta_bid, size = 1),
+                position_side=PositionSide.LONG,
+                order_type=OrderType.LIMIT,
+                datetime=datetime
+            )
             if self.broker.previous_orders.is_empty():
                 self.send_order(long_order, next_tick_price)
             elif check_two_stringtime_greater_thresh(self.broker.previous_orders.datetime, datetime, self.time_step):
@@ -228,11 +231,12 @@ class Bot:
         if delta_ask != 0:
             delta_ask = round(delta_ask, 1)
             short_order = DataOrder(
-                                    order_id=next(self.count_order_ids),
-                                    price_size=PriceSize(price=delta_ask, size = 1),
-                                    position_side=PositionSide.SHORT,
-                                    order_type=OrderType.LIMIT,
-                                    datetime=datetime)
+                order_id=next(self.count_order_ids),
+                price_size=PriceSize(price=delta_ask, size = 1),
+                position_side=PositionSide.SHORT,
+                order_type=OrderType.LIMIT,
+                datetime=datetime
+            )
             if self.broker.previous_orders.is_empty():
                 self.send_order(short_order, next_tick_price)
             elif check_two_stringtime_greater_thresh(self.broker.previous_orders.datetime, datetime, self.time_step):
