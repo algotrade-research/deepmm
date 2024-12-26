@@ -2,8 +2,6 @@ from typing import Any
 import numpy as np
 import math
 
-from utils.date_management import calculate_distance_milis
-
 class PureMM:
     def __init__(self, opts):
         # Parameters for mid price simulation:
@@ -44,18 +42,6 @@ class PureMM:
             delta_ask is the ask price, 
             and reserv_price is the reservation price
         """
-        
-        # if self.start_time is None:
-        #     self.start_time = datetime
-        #     return 0, 0, 0
-        # self.counter += 1
-        # lambda_ = calculate_distance_milis(datetime, self.start_time)/self.counter
-        # T_prime = self._calculate_new_T(self.counter, lambda_)
-        # self.T = min(self.T, T_prime)
-        # if self.T < 0:
-        #     self.T = 0
-        # calculate volatility
-        
         self.T -= 2.5e-5
         if self.T < 0:
             self.T = 1e-6
