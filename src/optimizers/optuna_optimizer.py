@@ -1,7 +1,6 @@
-
 import optuna
 
-class Optimzer():
+class Optimizer:
     def __init__(self, opts):
         self.opts = opts
         self.study = optuna.create_study(
