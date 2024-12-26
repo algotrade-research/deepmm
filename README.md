@@ -98,7 +98,7 @@ Unzip the dataset into the source root under the folder `datasetATDB`. Inside th
 * TRAIN, VAL, TEST: Definitions for training, validation, and testing datasets used by the pipeline.
     * csv_file: Path to the CSV file containing the market data for each set.
 
-# Custom Flags for Pipeline Configuration
+### Custom Flags for Pipeline Configuration
 This section explains how to modify specific pipeline parameters at runtime using command-line flags. These flags override the defaults defined in the configuration file.
 
 Example:
