@@ -1,29 +1,186 @@
+# Abstract
 
-# DeepMM
+ DeepMM (Deep dive Market Making) module is a Python package for backtesting, analysing and optimizing trading 
+ strategies. It includes a number of pre-implemented strategies, but it is also possible to create new strategies, as 
+ well as to combine them.
 
- DeepMM (Deep dive Market Making) module is a Python package for backtesting, analysing and optimizing trading strategies. It includes a number of pre-implemented strategies, but it is also possible to create new strategies, as well as to combine them.
+# Introduction
 
-# Model we tried
+In this work, we implemented a variety of different strategies and market making around the midprice.
+Specifically, we implemented Avellaneda-Stoikov Market Making Model [1]. This model allowed us to adjust for inventory 
+and volatility in a much more profitable way. Refer file `src/strategy/asmodel.py`.
 
-We tried out a variety of different strategies and market making around the midprice:
-- Avellaneda-Stoikov Market Making Model. This model allowed us to adjust for inventory and volatility in a much more profitable way. Refer `src/strategy/market_making.py`
+# Implementation
+
+In this section, we demonstrate steps to install and run the project and reproduce the experimental results.
+
+## Installation
+
+This section guides you through installing the necessary software to run the pipeline
+
+### Clone the GitHub repo
+The GitHub repo can be cloned by running
+```bash
+git clone git@github.com:algotrade-research/deepmm.git
+```
+Please make sure you have the correct credentials/privilege to run that command.
+
+Or download the zip file through the repo main page: `https://github.com/algotrade-research/deepmm`
+
+### Create a virtual environment
+
+This project use Python 3.12. Make sure you are using Python 3.12 to create virtual environment.
+
+Run the following to create a virtual environment.
+```bash
+python -m venv .venv
+```
+where `.venv` is the folder contain the virtual environment. Refer to this [tutorial](https://docs.python.org/3/library/venv.html) for more information.
+
+Then activate the environment by running:
+```bash
+source .venv/bin/activate
+```
+
+Then install the packages by `pip` through the `requirements.txt` file by running:
+```bash
+pip install -r requirements.txt
+```
+
+### Installing Plutus
+The Plutus source code (in zip file) can be downloaded [here](https://drive.google.com/file/d/1O6i_B6EhxJ1EijGl0MHNPhykG21QD1Zz/view?usp=drive_link).
+
+After downloading the source code, Plutus package can be installed by running:
+```bash
+pip install path/to/the/zip/file/plutus-0.0.1.zip
+```
+
+Now the project can be run.
+
+## Data
+
+### Data Format
+deepmm works with data formatted like this:
+```
+datetime,price,tickersymbol
+```
+Here's what each column means:
+- datetime: The timestamp for each piece of data.
+- price: The price of the asset at that timestamp.
+- tickersymbol: The symbol for the asset (e.g., VN30F2304).
+
+### Downloading Data from algotrade public datasets
+
+A comprehensive dataset, meticulously curated by algotrade experts, is available for download though [link](https://drive.google.com/drive/folders/1ZJzFUcxd5mdt8MA9r7lhx3MY1zw1uqdY?usp=sharing). This dataset contains a vast quantity of data points specifically designed to serve as a benchmark for scientific experimentation.
+
+Unzip the dataset into the source root under the folder `datasetATDB`. Inside the folder, there should be three CSV files: `train.csv`, `test.csv`, `val.csv`.
+
+## Training Pipeline
+
+1. Create a Configuration File: Define the training parameters in a configuration file. A default configuration file 
+   is `configs/parameters/pseudo_marketmaking.yaml`.
+
+2. Run the Training Script: Execute the following command in your terminal, replacing `[path_to_config_file]` with the actual path to your configuration file:
+
+```bash
+python run.py -c [path_to_config_file]
+```
+This command launches the run.py script with the specified configuration file.
+
+It is worth noting that running hyper-parameter optimization can take a very long time, depending on data size and 
+number of possible combinations in hyper-parameters (`params` section in file 
+`configs/parameters/pseudo_marketmaking.yaml`). To reduce the running time, one can reduce the number of possible 
+values for each hyper-parameters
+
+3. Additional Training Flags: Refer to the documentation [config](config.md) for details on using additional flags during training. These flags allow for further customization of the training process.
+
+## Runnning Inference only
+If you only want to use the trained model for predictions (inference) without retraining (skipping optimization phase), use the following command:
+```bash
+python run.py -c [path_to_config_file] -o PIPELINE.params.is_optimization=False
+```
+
+This command runs the pipeline with the parameters defined in the configuration file but disables the optimization phase (`is_optimization=False`). This means the pipeline will use the pre-trained model for inference without searching for better hyperparameters.
+
+# Run papertrading
+This section provides instructions on how to run paper trading.
+## Prepare account paper trading
+### Step 1: Contact for Registration
+Please reach out to the algotrade team to initiate the registration process. They will guide you through the steps and provide you with your account credentials.
+### Step 2: Configure Account Credentials
+Create a file named redis_account.yaml inside the directory configs/usr/. This file will store your account information securely. Here's an example of what the file should look like, replacing the #### placeholders with your actual credentials:
+```yaml
+host: #### 
+port: ####
+password: ####
+```
 
 
-# Getting started
+## Run paper trading
+
+1. Create a Configuration File: Define the training parameters in a configuration file. An example configuration file can be named `configs/parameters/papertrading.yaml`.
+
+2. Run the Training Script: Execute the following command in your terminal, replacing `[path_to_config_file]` with the actual path to your configuration file:
+
+```bash
+python run_papertrading.py -c [path_to_config_file]
+##e.g:  python run_papertrading.py -c configs/parameters/papertrading.yaml
+```
+This command launches the `run_papertrading.py` script with the specified configuration file.
+
+**Note**: This simulation will receive data during Vietnamese trading hours only. If you want to conduct offline paper trading simulations with test data, please create a separate test dataset and run the run.py script as described in the run.md documentation.
+
+# Configuration document descriptions
+Pipeline Parameters for Market Making (v1.0.0)
+This pipeline implements the Avellaneda-Stoikov model for market making.
+
+## General Parameters:
+
+* fee (float): Transaction fee charged per trade (eg: 0.125 points).
+* save_dir (str): Directory to save the pipeline's output files. (eg: "runs/market_making")
+* is_optimization (bool): Flag indicating if the pipeline is running in optimization mode (potentially tuning hyperparameters).
+
+## Market Making Specific Parameters:
+* maximum_inventory (int): Maximum number of underlying assets the pipeline will hold at any given time (prevents excessive risk). (eg: 35)
+* num_of_spread (float): Target spread between the bid and ask prices quoted by the pipeline (e.g., current price is 10 and spread is 3, if num_of_spread is 2.0, then bid-ask price will be 4 and 16 respectively).
+* gamma (float): Risk aversion parameter used in the Avellaneda-Stoikov model (higher values indicate lower risk tolerance).
+* historical_window_size (int): Number of days of historical data used to calculate the underlying asset's volatility.
+* min_second_time_step (int): Minimum time (in seconds) between order updates placed by the pipeline.
+* close_at (str): Time of day to cease quoting prices and unwind any remaining inventory. (eg: "14:20:45")
+* start_at (str): Time of day to begin quoting prices and actively participate in the market. (eg: "09:00:00")
+
+## Optimizer
+* name: Name of the optimizer used for hyperparameter tuning
+* params: Configuration parameters for the optimizer.
+
+    * n_trials (50): Number of independent trials to run during the optimization process.
+    * study_name ("market_making"): Name of the optimization study for logging and tracking purposes.
+    * storage ("sqlite:///market_making.db"): Location to store optimization data (uses SQLite database).
+    * load_if_exists (True): Flag indicating if existing optimization results should be loaded (useful for resuming interrupted runs).
+
+## Dataset:
+
+* TRAIN, VAL, TEST: Definitions for training, validation, and testing datasets used by the pipeline.
+    * csv_file: Path to the CSV file containing the market data for each set.
 
 
-For detailed user guides and advanced guides, please refer to our documentation:
-* User guides:
-    <details>
-    <summary>Details</summary>
-        <ul>
-        <li> <a href='./docs/en/user_guides/installation.md'>Installation</a></li>
-        <li> <a href='./docs/en/user_guides/preparing_dataset.md'>Data preparation</a></li>
-        <li> <a href='./docs/en/user_guides/run.md'>Run</a></li>
-        <li> <a href='./docs/en/user_guides/papertrading.md'>Papertrading</a></li>
-        </ul>
-    </details>
+This configuration provides a detailed explanation of all parameters used in the market making pipeline, optimizer, and dataset specifications.
 
+# Custom Flags for Pipeline Configuration
+This section explains how to modify specific pipeline parameters at runtime using command-line flags. These flags override the defaults defined in the configuration file.
+
+Example:
+
+```bash
+python run.py -c configs/parameters/pseudo_marketmaking.yaml -o PIPELINE.params.save_dir='new_exp'
+```
+In this example:
+
+* `python run.py`: This launches the Python script (`run.py`) that executes the pipeline.
+* `-c configs/parameters/pseudo_marketmaking.yaml`: This flag specifies the configuration file (`pseudo_marketmaking.yaml`) containing the default pipeline parameters.
+* `-o PIPELINE.params.save_dir='new_exp'`: This is the custom flag denoted by `-o`. It overrides the default value for the `save_dir` parameter within the `PIPELINE.params` section of the configuration file. Here, we're setting the new directory to `new_exp`.
+
+**Note**: Essentially, you can use the `-o` flag followed by the desired parameter path and its new value to customize specific parameters on the fly without modifying the configuration file itself.
 
 We also provide the experiment on [colab](https://colab.research.google.com/drive/1gnMGsCedhIbKEm4xRO7utDPsQAFcxTXm?usp=sharing)
 
