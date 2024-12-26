@@ -116,13 +116,12 @@ In this example:
 
 ## Training Pipeline
 
-Run the Training Script: Execute the following command in your terminal, replacing `[path_to_config_file]` with the actual path to your configuration file:
-
+Run the Training Script with the following command:
 ```bash
 python run.py -c configs/parameters/pseudo_marketmaking.yaml
 ```
-This command launches the run.py script, performs optimization (brute-force all possible combinations of parameters 
-specified in `OPTIMIZER` section), and use the best parameter combination (highest Sharpe Ratio) to on Training and 
+This command launches the `run.py` script, performs optimization (brute-force all possible combinations of parameters 
+specified in `OPTIMIZER` section), and use the best parameter combination (highest Sharpe Ratio) on Training and 
 Validation data.
 
 It is worth noting that running hyper-parameter optimization can take a very long time, depending on data size and 
