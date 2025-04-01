@@ -1,3 +1,4 @@
+![Static Badge](https://img.shields.io/badge/PLUTUS-verified_50%25-yellow)
 
 # DeepMM
 
